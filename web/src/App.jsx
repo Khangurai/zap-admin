@@ -1,0 +1,43 @@
+import "./App.css";
+import AppLayout from "./components/AppLayout";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import MissionControl from "./pages/mission-control";
+import UserList from "./pages/users";
+
+import Drivers from "./pages/drivers";
+
+import CarsMgmt from "./pages/cars";
+import Login from "./Auth/Login";
+import ProtectedRoute from "./components/ProtectedRoute";
+import AuthProvider from "./auth/AuthProvider";
+import Index from "./pages/routes";
+import RouterGenerator from "./pages/map-tracking/MapTracking";
+
+const App = () => {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <AppLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<MissionControl />} />
+            {/* <Route path="/map-tracking" element={<RouterGenerator />} /> */}
+            <Route path="/routes" element={<Index />} />
+            <Route path="/drivers" element={<Drivers />} />
+            <Route path="/cars" element={<CarsMgmt />} />
+            <Route path="/users" element={<UserList />} />
+          </Route>
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
+  );
+};
+
+export default App;

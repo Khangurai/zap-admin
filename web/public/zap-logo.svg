@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-zap-icon lucide-zap">
+  <path d="M 5.008 14.124 C 4.339 14.125 3.919 13.402 4.251 12.822 C 4.274 12.782 4.301 12.743 4.331 12.707 L 12.935 3.842 C 13.154 3.589 13.564 3.668 13.673 3.984 C 13.702 4.067 13.705 4.157 13.682 4.242 L 12.013 9.474 C 11.8 10.042 12.223 10.649 12.83 10.647 L 18.914 10.647 C 19.583 10.645 20.004 11.368 19.671 11.948 C 19.647 11.988 19.621 12.027 19.592 12.064 L 10.988 20.929 C 10.769 21.181 10.358 21.101 10.248 20.786 C 10.22 20.703 10.217 20.613 10.24 20.529 L 11.909 15.297 C 12.122 14.728 11.7 14.121 11.092 14.124 L 5.008 14.124 Z" style="paint-order: stroke; stroke: rgb(234, 0, 0); fill: rgb(255, 0, 0); stroke-width: 0.7px;"/>
+</svg>
