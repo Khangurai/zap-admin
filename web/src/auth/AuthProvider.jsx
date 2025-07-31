@@ -1,9 +1,6 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "../../server/supabase/supabaseClient"; // Adjust the import path as necessary
-
-const AuthContext = createContext({});
-
-export const useAuth = () => useContext(AuthContext);
+import { AuthContext } from "./AuthContext";
 
 const AuthProvider = ({ children }) => {
   const [session, setSession] = useState(null);

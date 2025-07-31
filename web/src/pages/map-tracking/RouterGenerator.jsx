@@ -15,7 +15,7 @@ const RouterGenerator = () => {
   return (
     <APIProvider
       apiKey={GOOGLE_MAPS_API_KEY}
-      libraries={["places"]}
+      libraries={["places", "routes"]}
     >
       <MapWithRouter />
     </APIProvider>
@@ -31,7 +31,6 @@ const MapWithRouter = () => {
   const originRef = useRef();
   const destinationRef = useRef();
 
-  const map = useMap();
   const placesLib = useMapsLibrary("places");
   const [autocompleteOrigin, setAutocompleteOrigin] = useState(null);
   const [autocompleteDest, setAutocompleteDest] = useState(null);

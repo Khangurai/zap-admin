@@ -4,7 +4,7 @@ import { Dropdown, Space, message } from "antd";
 import profile from "../assets/profile-user.png";
 import { supabase } from "../../server/supabase/supabaseClient"; // Adjust the import path as necessary
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../Auth/AuthProvider";
+import { useAuth } from "../auth/useAuth";
 
 const ProfileIcon = () => {
   const navigate = useNavigate();
