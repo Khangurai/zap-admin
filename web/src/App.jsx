@@ -3,15 +3,14 @@ import AppLayout from "./components/AppLayout";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import MissionControl from "./pages/mission-control";
 import UserList from "./pages/users";
-
 import Drivers from "./pages/drivers";
-
 import CarsMgmt from "./pages/cars";
 import Login from "./auth/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AuthProvider from "./auth/AuthProvider";
 import Index from "./pages/create-routes";
 import RouterGenerator from "./pages/map-tracking/MapTracking";
+import { supabase } from "../server/supabase/supabaseClient";
 
 const App = () => {
   return (
