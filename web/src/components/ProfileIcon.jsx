@@ -1,10 +1,11 @@
 import React from "react";
-import { SettingOutlined, LogoutOutlined } from "@ant-design/icons";
+import { SettingOutlined, LogoutOutlined, EditOutlined } from "@ant-design/icons";
 import { Dropdown, Space, message } from "antd";
 import profile from "../assets/profile-user.png";
 import { supabase } from "../../server/supabase/supabaseClient"; // Adjust the import path as necessary
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
+
 
 const ProfileIcon = () => {
   const navigate = useNavigate();
@@ -32,12 +33,13 @@ const ProfileIcon = () => {
     {
       key: "2",
       label: "Profile",
+      icon: <EditOutlined />,
     },
-    {
-      key: "4",
-      label: "Settings",
-      icon: <SettingOutlined />,
-    },
+    // {
+    //   key: "4",
+    //   label: "Settings",
+    //   icon: <SettingOutlined />,
+    // },
     {
       type: "divider",
     },
@@ -53,9 +55,13 @@ const ProfileIcon = () => {
     <Dropdown menu={{ items }}>
       <a onClick={(e) => e.preventDefault()}>
         <Space>
-          <img src={profile} className="profile-img" style={{marginTop: "25px"}}/>
+          <img
+            src={profile}
+            className="profile-img"
+            style={{ marginTop: "25px" }}
+          />
           {/* Display username, with a fallback */}
-          <span style={{ color: "#333", fontWeight: "500",marginTop: "8px" }}>
+          <span style={{ color: "#333", fontWeight: "500", marginTop: "8px" }}>
             {userProfile?.username || "Admin"}
           </span>
         </Space>

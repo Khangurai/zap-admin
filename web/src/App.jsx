@@ -10,7 +10,7 @@ import CarsMgmt from "./pages/cars";
 import Login from "./Auth/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AuthProvider from "./auth/AuthProvider";
-import Index from "./pages/routes";
+import Index from "./pages/create-routes";
 import RouterGenerator from "./pages/map-tracking/MapTracking";
 
 const App = () => {
