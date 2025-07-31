@@ -180,11 +180,9 @@ export const useMapState = () => {
             prevWaypoints.map((w) => {
               if (w.id === id) {
                 return {
-                  ...w,
-                  name: newPlace.name || newPlace.formatted_address,
-                  formatted_address: newPlace.formatted_address,
+                  ...newPlace,
+                  id: w.id,
                   geometry: {
-                    ...w.geometry,
                     location: newPosition,
                   },
                 };
@@ -228,15 +226,12 @@ export const useMapState = () => {
       geocoder.geocode({ location: newPosition }, (results, status) => {
         if (status === "OK" && results && results[0]) {
           const newPlace = results[0];
-          setOrigin((prevOrigin) => ({
-            ...prevOrigin,
-            name: newPlace.name || newPlace.formatted_address,
-            formatted_address: newPlace.formatted_address,
+          setOrigin({
+            ...newPlace,
             geometry: {
-              ...prevOrigin.geometry,
               location: newPosition,
             },
-          }));
+          });
         } else {
           console.error(`Geocoder failed due to: ${status}`);
         }
@@ -266,15 +261,12 @@ export const useMapState = () => {
       geocoder.geocode({ location: newPosition }, (results, status) => {
         if (status === "OK" && results && results[0]) {
           const newPlace = results[0];
-          setDestination((prevDestination) => ({
-            ...prevDestination,
-            name: newPlace.name || newPlace.formatted_address,
-            formatted_address: newPlace.formatted_address,
+          setDestination({
+            ...newPlace,
             geometry: {
-              ...prevDestination.geometry,
               location: newPosition,
             },
-          }));
+          });
         } else {
           console.error(`Geocoder failed due to: ${status}`);
         }
