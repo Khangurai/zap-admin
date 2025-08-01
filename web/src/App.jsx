@@ -27,8 +27,8 @@ const App = () => {
             }
           >
             <Route index element={<MissionControl />} />
-            {/* <Route path="/map-tracking" element={<RouterGenerator />} /> */}
-            <Route path="/routes" element={<Index />} />
+            <Route path="/map-tracking" element={<RouterGenerator />} />
+            <Route path="/create-routes" element={<Index />} />
             <Route path="/drivers" element={<Drivers />} />
             <Route path="/cars" element={<CarsMgmt />} />
             <Route path="/users" element={<UserList />} />
