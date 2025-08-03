@@ -20,7 +20,7 @@ const MapTracking = () => {
   const [markerRef, marker] = useAdvancedMarkerRef();
 
   return (
-    <div style={{ height: "100vh", width: "100%" }}>
+    <div style={{ height: "85vh", width: "100%" }}>
       <APIProvider apiKey={API_KEY}>
         <Map
           defaultZoom={3}

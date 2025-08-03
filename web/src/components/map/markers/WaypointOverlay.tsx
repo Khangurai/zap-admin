@@ -12,12 +12,14 @@ export function WaypointOverlay({ waypoint, index }) {
         transform: "rotate(5deg)",
         boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
         width: 300,
+        // width: "auto",
+        // transform: "none",
       }}
       bodyStyle={{ padding: "12px" }}
     >
       <Row align="middle" gutter={[12, 0]}>
         <Col>
-          <GripVertical size={16} style={{ color: "#1890ff" }} />
+          <GripVertical size={16} style={{ color: "#1897ffff" }} />
         </Col>
         <Col>
           <div
@@ -25,7 +27,7 @@ export function WaypointOverlay({ waypoint, index }) {
               width: 24,
               height: 24,
               borderRadius: "50%",
-              backgroundColor: "#1890ff",
+              backgroundColor: "#1d8ffaff",
               color: "white",
               display: "flex",
               alignItems: "center",

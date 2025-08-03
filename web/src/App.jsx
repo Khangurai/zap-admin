@@ -10,7 +10,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AuthProvider from "./auth/AuthProvider";
 import Index from "./pages/create-routes";
 import RouterGenerator from "./pages/map-tracking/MapTracking";
-import { supabase } from "../server/supabase/supabaseClient";
+import Profile from "./pages/user-profile/profile";
+
 
 const App = () => {
   return (
@@ -32,6 +33,7 @@ const App = () => {
             <Route path="/drivers" element={<Drivers />} />
             <Route path="/cars" element={<CarsMgmt />} />
             <Route path="/users" element={<UserList />} />
+            <Route path="/profile" element={<Profile />} />
           </Route>
         </Routes>
       </AuthProvider>

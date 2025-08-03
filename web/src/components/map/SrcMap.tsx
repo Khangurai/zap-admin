@@ -6,11 +6,15 @@ const DEFAULT_CENTER = { lat: 16.8409, lng: 96.1735 };
 const SrcMap = ({ children, onMapClick }) => {
   const map = useMap();
   const [mapTypeControlOptions, setMapTypeControlOptions] = useState(undefined);
+  const [fullscreenControlOptions, setFullscreenControlOptions] = useState(undefined);
 
   useEffect(() => {
     if (map) {
       setMapTypeControlOptions({
         style: window.google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+        position: window.google.maps.ControlPosition.TOP_CENTER,
+      });
+      setFullscreenControlOptions({
         position: window.google.maps.ControlPosition.RIGHT_TOP,
       });
     }
@@ -34,6 +38,7 @@ const SrcMap = ({ children, onMapClick }) => {
         mapTypeControl={true}
         mapTypeControlOptions={mapTypeControlOptions}
         fullscreenControl={true}
+        fullscreenControlOptions={fullscreenControlOptions}
         onClick={onMapClick}
         style={{
           width: "100%",

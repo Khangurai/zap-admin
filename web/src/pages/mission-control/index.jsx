@@ -1,8 +1,9 @@
 import React from 'react'
+import StarsCanvas from '../../components/starBackground'
 
 const index = () => {
   return (
-    <div>index</div>
+    <StarsCanvas/>
   )
 }
 

@@ -1,0 +1,11 @@
+.avatar-upload .ant-upload-list-item-actions {
+  display: flex !important;
+  justify-content: center !important;
+  gap: 6px; /* space between icons */
+}
+
+.avatar-upload .ant-upload-list-item-actions a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

@@ -26,12 +26,13 @@ export function DraggableWaypoint({ waypoint, index, onDelete }) {
         size="small"
         style={{
           marginBottom: 8,
-          border: isDragging ? "2px dashed #1890ff" : "1px solid #d9d9d9",
+          border: isDragging ? "2px dashed #188fffff" : "1px solid #d9d9d9",
           backgroundColor: isDragging ? "#f0f9ff" : "#ffffff",
         }}
         bodyStyle={{ padding: "12px" }}
       >
-        <Row align="middle" gutter={[12, 0]}>
+        <Row align="middle" gutter={[8, 0]} wrap={false}>
+          {/* Drag Handle */}
           <Col>
             <div
               {...attributes}
@@ -39,7 +40,7 @@ export function DraggableWaypoint({ waypoint, index, onDelete }) {
               style={{
                 cursor: isDragging ? "grabbing" : "grab",
                 color: "#8c8c8c",
-                fontSize: "14px",
+                fontSize: "12px",
                 padding: "4px",
               }}
             >
@@ -47,13 +48,14 @@ export function DraggableWaypoint({ waypoint, index, onDelete }) {
             </div>
           </Col>
 
+          {/* Waypoint Index */}
           <Col>
             <div
               style={{
                 width: 24,
                 height: 24,
                 borderRadius: "50%",
-                backgroundColor: "#1890ff",
+                backgroundColor: "#188fffff",
                 color: "white",
                 display: "flex",
                 alignItems: "center",
@@ -66,26 +68,26 @@ export function DraggableWaypoint({ waypoint, index, onDelete }) {
             </div>
           </Col>
 
+          {/* Waypoint Name (pushed down slightly) */}
           <Col flex="auto">
-            <div>
-              <span style={{ fontSize: "14px" }}>
+            <div style={{ display: "flex", alignItems: "flex-end", height: "100%" }}>
+              <span style={{ fontSize: "14px", lineHeight: "1.2" }}>
                 {waypoint.name || waypoint.formatted_address}
               </span>
             </div>
           </Col>
 
+          {/* Delete Button aligned Right */}
           <Col>
-            <Space size="small">
-              <Tooltip title="Remove waypoint">
-                <Button
-                  type="text"
-                  size="small"
-                  danger
-                  icon={<DeleteOutlined />}
-                  onClick={() => onDelete(waypoint.id)}
-                />
-              </Tooltip>
-            </Space>
+            <Tooltip title="Remove waypoint">
+              <Button
+                type="text"
+                size="small"
+                danger
+                icon={<DeleteOutlined />}
+                onClick={() => onDelete(waypoint.id)}
+              />
+            </Tooltip>
           </Col>
         </Row>
       </Card>
