@@ -381,10 +381,11 @@ const Controls = ({
             icon={<Navigation size={16} />}
             onClick={centerOnYangon}
             style={{
-              background: "white",
+              background: "rgba(255, 255, 255, 0.68)",
               border: "1px solid #ddd",
               borderRadius: "8px",
               boxShadow: "0 4px 10px rgba(0,0,0,0.15)",
+              backdropFilter: "blur(10px)",
             }}
           >
             Center on Yangon
