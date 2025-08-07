@@ -124,8 +124,8 @@ const Controls = ({
           <Card
             size="small"
             style={{
-              width: "100%",
-              padding: "16px",
+              width: "320px",
+              padding: "5px",
               borderRadius: "16px",
               background: "rgba(255, 255, 255, 0.74)",
               backdropFilter: "blur(10px)",
