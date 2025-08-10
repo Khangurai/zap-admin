@@ -1,7 +1,7 @@
 import "./App.css";
 import AppLayout from "./components/AppLayout";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import MissionControl from "./pages/mission-control";
+import MissionControl from "./pages/mission-control/index";
 import UserList from "./pages/users";
 import Drivers from "./pages/drivers";
 import CarsMgmt from "./pages/cars";
@@ -11,6 +11,7 @@ import AuthProvider from "./auth/AuthProvider";
 import Index from "./pages/create-routes";
 import RouterGenerator from "./pages/map-tracking/MapTracking";
 import Profile from "./pages/user-profile/profile";
+import { MapIcon } from "lucide-react";
 
 
 const App = () => {
@@ -31,8 +32,8 @@ const App = () => {
             <Route path="/map-tracking" element={<RouterGenerator />} />
             <Route path="/routes" element={<Index />} />
             <Route path="/drivers" element={<Drivers />} />
-            <Route path="/cars" element={<CarsMgmt />} />
             <Route path="/users" element={<UserList />} />
+            <Route path="/cars" element={<CarsMgmt />} />
             <Route path="/profile" element={<Profile />} />
           </Route>
         </Routes>

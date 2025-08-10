@@ -73,14 +73,14 @@ const Sidebar = ({ collapsed }) => {
             label: "Drivers",
           },
           {
-            key: "/cars",
-            icon: <Car />,
-            label: "Cars Management",
-          },
-          {
             key: "/users",
             icon: <UserCog />,
             label: "Users",
+          },
+          {
+            key: "/cars",
+            icon: <Car />,
+            label: "Cars Management",
           },
         ]}
       />

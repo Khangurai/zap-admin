@@ -30,6 +30,7 @@ import {
 import PlaceAutocomplete from "./PlaceAutocomplete";
 import { DraggableWaypoint } from "../markers/DraggableWaypoint";
 import { WaypointOverlay } from "../markers/WaypointOverlay";
+import copy from "copy-to-clipboard";
 import StarsCanvas from "../../starBackground"; // ✅ Import StarsCanvas
 
 interface ControlsProps {
@@ -102,11 +103,13 @@ const Controls = ({
 
   const copyToClipboard = () => {
     if (!savedRouteGeoJSON) return;
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(savedRouteGeoJSON).then(() => {
-        setIsCopied(true);
-        setTimeout(() => setIsCopied(false), 2000);
-      });
+
+    const success = copy(savedRouteGeoJSON);
+    if (success) {
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    } else {
+      console.error("Copy failed");
     }
   };
 
