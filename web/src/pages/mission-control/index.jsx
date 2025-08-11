@@ -1,21 +1,97 @@
-import React, { useEffect, useRef } from "react";
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
-
-// ✅ Correct way: Import GeoJSON (ensure it's a valid FeatureCollection)
-import membersGeoJSON from "./members.js"; // Adjust path as needed
+import React, { useEffect, useRef, useState } from "react";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
+import { supabase } from "../../../server/supabase/supabaseClient";
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
+
+const DEFAULT_CENTER = { lat: 16.8409, lng: 96.1735 };
+const ZOOM_LEVEL = 12;
 
 const Index = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const markersRef = useRef([]);
+  const [users, setUsers] = useState([]);
 
-  // Initialize map
+  // Fetch users from Supabase
   useEffect(() => {
+    const fetchUsers = async () => {
+      const { data, error } = await supabase
+        .from("users")
+        .select("id, name, team_code, latitude, longitude, location");
+
+      if (error) {
+        console.error("Error fetching users:", error);
+        return;
+      }
+
+      const parsedUsers = data
+        .map((user) => {
+          let lat, lng;
+
+          // Prefer explicit latitude/longitude
+          if (user.latitude !== null && user.longitude !== null) {
+            lat = parseFloat(user.latitude);
+            lng = parseFloat(user.longitude);
+          }
+          // Fallback: parse PostGIS `location` (assumed EWKT like: "POINT(longitude latitude)")
+          else if (user.location) {
+            try {
+              const match = user.location.match(
+                /POINT\s*\(\s*([^\s]+)\s+([^\)]+)/
+              );
+              if (match) {
+                lng = parseFloat(match[1]);
+                lat = parseFloat(match[2]);
+              }
+            } catch (err) {
+              console.error("Failed to parse location:", user.location, err);
+            }
+          }
+
+          return {
+            id: user.id,
+            name: user.name || "Unknown",
+            team_code: user.team_code,
+            lat,
+            lng,
+          };
+        })
+        .filter((user) => user.lat && user.lng); // Only keep valid coordinates
+
+      setUsers(parsedUsers);
+    };
+
+    fetchUsers();
+  }, []);
+
+  // Initialize map and add markers
+  useEffect(() => {
+    if (map.current) return; // Prevent re-initialization
+
+    // Determine initial center
+    const hasValidUsers = users.length > 0;
+    const center = hasValidUsers
+      ? [users[0].lng, users[0].lat] // Use first user
+      : [DEFAULT_CENTER.lng, DEFAULT_CENTER.lat];
+
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: "mapbox://styles/mapbox/streets-v11",
+      center,
+      zoom: ZOOM_LEVEL,
+    });
+
+    map.current.addControl(new mapboxgl.NavigationControl());
+
+    // Add markers once map is loaded
+    map.current.on("load", () => {
+      addMarkersToMap(users);
+    });
+
+    // Cleanup on unmount
     return () => {
-      // Cleanup on unmount
       if (map.current) {
         map.current.remove();
         map.current = null;
@@ -23,129 +99,41 @@ const Index = () => {
       markersRef.current.forEach((marker) => marker.remove());
       markersRef.current = [];
     };
-  }, []);
+  }, [users]); // Re-run when users change
 
-  // Fetch and display optimized route
-  useEffect(() => {
-    // Extract waypoints from GeoJSON
-    const waypoints = membersGeoJSON.features.map((f) => ({
-      name: f.properties.name || "Unnamed",
-      coordinates: f.geometry.coordinates, // [lng, lat]
-    }));
+  // Function to add markers
+  const addMarkersToMap = (users) => {
+    // Remove existing markers
+    markersRef.current.forEach((marker) => marker.remove());
+    markersRef.current = [];
 
-    const limitedWaypoints = waypoints.slice(0, 12); // Max 12 supported
-
-    if (limitedWaypoints.length < 2) {
-      console.warn("Need at least 2 waypoints for routing.");
+    if (users.length === 0) {
+      new mapboxgl.Marker({ color: "gray" })
+        .setLngLat([DEFAULT_CENTER.lng, DEFAULT_CENTER.lat])
+        .setPopup(new mapboxgl.Popup().setText("No users available"))
+        .addTo(map.current);
       return;
     }
 
-    // Initialize map if not already done
-    if (!map.current) {
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: "mapbox://styles/mapbox/streets-v11",
-        center: limitedWaypoints[0].coordinates,
-        zoom: 13,
-      });
+    const bounds = new mapboxgl.LngLatBounds();
 
-      map.current.addControl(new mapboxgl.NavigationControl());
+    users.forEach((user) => {
+      const { lat, lng, name, team_code } = user;
+      const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(
+        `<strong>${name}</strong><br/>Team: ${team_code || "N/A"}`
+      );
 
-      // Wait for map to fully load before adding layers
-      map.current.on("load", () => {
-        fetchAndRenderRoute(limitedWaypoints);
-      });
-    } else if (map.current.isStyleLoaded()) {
-      fetchAndRenderRoute(limitedWaypoints);
-    } else {
-      map.current.on("load", () => {
-        fetchAndRenderRoute(limitedWaypoints);
-      });
-    }
-  }, []);
+      const marker = new mapboxgl.Marker({ color: "#3b9ddd" })
+        .setLngLat([lng, lat])
+        .setPopup(popup)
+        .addTo(map.current);
 
-  const fetchAndRenderRoute = async (waypoints) => {
-    try {
-      // Clean and format coordinates safely
-      const coordinates = waypoints
-        .map((wp) => {
-          const lon = parseFloat(wp.coordinates[0]).toFixed(6);
-          const lat = parseFloat(wp.coordinates[1]).toFixed(6);
-          return `${lon},${lat}`; // Ensures no extra spaces
-        })
-        .join(";");
+      markersRef.current.push(marker);
+      bounds.extend([lng, lat]);
+    });
 
-      const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${coordinates}?alternatives=false&geometries=geojson&language=en&overview=full&steps=true&roundtrip=false&access_token=${mapboxgl.accessToken}`;
-
-      console.log("Fetching URL:", url); // 👈 DEBUG: Check for spaces!
-
-      const res = await fetch(url);
-
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error("HTTP Error:", res.status, errorText);
-        return;
-      }
-
-      const data = await res.json();
-
-      if (data.code !== "Ok") {
-        console.error("Routing API error:", data.message || data);
-        return;
-      }
-
-      const trip = data.trips[0];
-
-      // Add or update route source and layer
-      if (map.current.getSource("route")) {
-        map.current.getSource("route").setData({
-          type: "Feature",
-          geometry: trip.geometry,
-          properties: {},
-        });
-      } else {
-        map.current.addSource("route", {
-          type: "geojson",
-          data: {
-            type: "Feature",
-            geometry: trip.geometry,
-            properties: {},
-          },
-        });
-
-        map.current.addLayer({
-          id: "route",
-          type: "line",
-          source: "route",
-          paint: {
-            "line-color": "#3b9ddd",
-            "line-width": 5,
-          },
-        });
-      }
-
-      // Remove existing markers
-      markersRef.current.forEach((marker) => marker.remove());
-      markersRef.current = [];
-
-      // Add markers in optimized order
-      data.waypoints.forEach((wp) => {
-        const original = waypoints[wp.waypoint_index];
-        const marker = new mapboxgl.Marker()
-          .setLngLat(original.coordinates)
-          .setPopup(new mapboxgl.Popup().setText(original.name))
-          .addTo(map.current);
-
-        markersRef.current.push(marker);
-      });
-
-      // Fit map to route bounds
-      const bounds = new mapboxgl.LngLatBounds();
-      trip.geometry.coordinates.forEach((coord) => bounds.extend(coord));
-      map.current.fitBounds(bounds, { padding: 50 });
-    } catch (error) {
-      console.error("Error fetching optimized route:", error);
-    }
+    // Fit map to show all markers
+    map.current.fitBounds(bounds, { padding: 60, maxZoom: 15 });
   };
 
   return <div ref={mapContainer} style={{ width: "100%", height: "600px" }} />;
