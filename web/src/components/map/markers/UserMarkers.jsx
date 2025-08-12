@@ -36,8 +36,21 @@ const UserMarker = ({ user }) => {
     filter: hovered ? "drop-shadow(0 0 5px rgba(255, 255, 0, 0.8))" : "none",
   };
 
+  // Use grey color if user.status is false (inactive)
+  const iconColor = user.status ? "red" : "grey";
+  const iconFill = user.status ? "red" : "grey";
+
   return (
     <>
+      <style>{`
+        .gm-ui-hover-effect {
+          display: none !important;
+        }
+        .gm-ui-hover-effect img {
+          display: none !important;
+        }
+      `}</style>
+
       <AdvancedMarker
         ref={markerRef}
         position={{ lat: user.latitude, lng: user.longitude }}
@@ -48,27 +61,64 @@ const UserMarker = ({ user }) => {
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
-          <Zap size={24} color="red" fill="red" />
+          <Zap size={24} color={iconColor} fill={iconFill} />
         </div>
       </AdvancedMarker>
+
       {infowindowShown && (
         <InfoWindow anchor={marker} onCloseClick={handleClose}>
           <div
             style={{
-              padding: "8px",
-              maxWidth: "250px",
+              padding: "10px 15px",
+              maxWidth: "280px",
               fontFamily:
-                "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+              background: "linear-gradient(145deg, #ffffff, #f9fafb)",
+              borderRadius: "14px",
+              boxShadow: "0 8px 20px rgba(0, 0, 0, 0.08)",
+              border: "1px solid rgba(229, 231, 235, 0.7)",
             }}
           >
             <div
               style={{
-                fontSize: "16px",
-                fontWeight: "600",
-                marginBottom: "4px",
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                marginBottom: "10px",
               }}
             >
-              {user.name}
+              <div
+                style={{
+                  width: "36px",
+                  height: "36px",
+                  borderRadius: "50%",
+                  backgroundColor: user.status ? "#fee2e2" : "#e5e7eb", // lighter grey background if inactive
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Zap size={18} color={iconColor} fill={iconFill} />
+              </div>
+              <div
+                style={{
+                  fontSize: "16px",
+                  fontWeight: "600",
+                  color: "#1f2937",
+                }}
+              >
+                {user.name}
+              </div>
+            </div>
+
+            <div
+              style={{
+                fontSize: "14px",
+                color: "#6b7280",
+                lineHeight: "1.4",
+              }}
+            >
+              📍 Lat: {user.latitude.toFixed(4)}, Lng: {user.longitude.toFixed(4)}
             </div>
           </div>
         </InfoWindow>
@@ -84,7 +134,7 @@ const UserMarkers = () => {
     const fetchUsers = async () => {
       const { data: usersData, error } = await supabase
         .from("users")
-        .select("id, name, longitude, latitude")
+        .select("id, name, longitude, latitude, status") // include status here
         .not("longitude", "is", null)
         .not("latitude", "is", null);
 

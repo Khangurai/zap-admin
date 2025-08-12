@@ -162,7 +162,7 @@ const WrappedMap = (props: ReturnType<typeof useMapState>) => {
           <div
             style={{
               padding: "8px",
-              maxWidth: "250px",
+              maxWidth: "200px",
               fontFamily:
                 "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
             }}
@@ -229,7 +229,7 @@ const WrappedMap = (props: ReturnType<typeof useMapState>) => {
           <div
             style={{
               padding: "8px",
-              maxWidth: "100px",
+              maxWidth: "200px",
               fontFamily:
                 "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
             }}

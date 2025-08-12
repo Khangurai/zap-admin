@@ -1,116 +1,115 @@
 import React, { useEffect, useRef, useState } from "react";
-import mapboxgl from "mapbox-gl";
-import "mapbox-gl/dist/mapbox-gl.css";
-import MapboxDirections from "@mapbox/mapbox-gl-directions/dist/mapbox-gl-directions";
-import "@mapbox/mapbox-gl-directions/dist/mapbox-gl-directions.css";
 
-mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
-export default function MapboxGoogleHybrid() {
+export default function GoogleMapsDirections() {
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
-  const directionsRef = useRef(null);
+  const directionsServiceRef = useRef(null);
+  const directionsRendererRef = useRef(null);
+  const [origin, setOrigin] = useState(null);
+  const [destination, setDestination] = useState(null);
   const [waypoints, setWaypoints] = useState([]);
-  const [waypointInputs, setWaypointInputs] = useState({});
 
   useEffect(() => {
-    const map = new mapboxgl.Map({
-      container: mapContainerRef.current,
-      style: "mapbox://styles/mapbox/streets-v12",
-      center: [96.15, 16.8], // Yangon
-      zoom: 12,
-    });
-    mapRef.current = map;
-
-    const directions = new MapboxDirections({
-      accessToken: mapboxgl.accessToken,
-      unit: "metric",
-      profile: "mapbox/driving-traffic",
-      controls: { inputs: false, instructions: true },
-      styles: [
-        {
-          id: "directions-route-line-alt",
-          type: "line",
-          source: "directions",
-          layout: { "line-cap": "round", "line-join": "round" },
-          paint: { "line-color": "#4882c5", "line-width": 8 },
-          filter: [
-            "all",
-            ["in", "$type", "LineString"],
-            ["in", "route", "alternate"],
-          ],
-        },
-        {
-          id: "directions-route-line-casing",
-          type: "line",
-          source: "directions",
-          layout: { "line-cap": "round", "line-join": "round" },
-          paint: { "line-color": "#2d5f9a", "line-width": 12 },
-          filter: [
-            "all",
-            ["in", "$type", "LineString"],
-            ["in", "route", "selected"],
-          ],
-        },
-        {
-          id: "directions-route-line",
-          type: "line",
-          source: "directions",
-          layout: { "line-cap": "round", "line-join": "round" },
-          paint: { "line-color": "#4882c5", "line-width": 8 },
-          filter: [
-            "all",
-            ["in", "$type", "LineString"],
-            ["in", "route", "selected"],
-          ],
-        },
-      ],
-    });
-    directionsRef.current = directions;
-    map.addControl(directions, "top-left");
-
     if (!window.google) {
       const googleScript = document.createElement("script");
       googleScript.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_API_KEY}&libraries=places`;
       googleScript.async = true;
       googleScript.defer = true;
       document.body.appendChild(googleScript);
-      googleScript.onload = () => setupAutocomplete();
+      googleScript.onload = () => initializeMap();
     } else {
-      setupAutocomplete();
+      initializeMap();
     }
-
-    return () => map.remove();
   }, []);
+
+  const initializeMap = () => {
+    const map = new window.google.maps.Map(mapContainerRef.current, {
+      center: { lat: 16.8, lng: 96.15 }, // Yangon
+      zoom: 12,
+      gestureHandling: "greedy",
+    });
+    mapRef.current = map;
+
+    directionsServiceRef.current = new window.google.maps.DirectionsService();
+    directionsRendererRef.current = new window.google.maps.DirectionsRenderer({
+      map: map,
+      panel: document.getElementById("directions-panel"),
+      suppressMarkers: false,
+      polylineOptions: {
+        strokeColor: "#4882c5",
+        strokeWeight: 8,
+      },
+    });
+
+    setupAutocomplete();
+  };
 
   const setupAutocomplete = () => {
     const originInput = document.getElementById("origin-input");
+    const autocompleteOrigin = new window.google.maps.places.Autocomplete(
+      originInput
+    );
+    autocompleteOrigin.addListener("place_changed", () => {
+      const place = autocompleteOrigin.getPlace();
+      if (place.geometry?.location) {
+        setOrigin(place.geometry.location);
+      }
+    });
+
     const destinationInput = document.getElementById("destination-input");
-
-    const setupListener = (input, setter) => {
-      const autocomplete = new window.google.maps.places.Autocomplete(input);
-      autocomplete.addListener("place_changed", () => {
-        const place = autocomplete.getPlace();
-        if (place.geometry?.location) {
-          const { lat, lng } = place.geometry.location;
-          setter([lng(), lat()]);
-        }
-      });
-    };
-
-    setupListener(originInput, (coords) =>
-      directionsRef.current.setOrigin(coords)
+    const autocompleteDestination = new window.google.maps.places.Autocomplete(
+      destinationInput
     );
-    setupListener(destinationInput, (coords) =>
-      directionsRef.current.setDestination(coords)
-    );
+    autocompleteDestination.addListener("place_changed", () => {
+      const place = autocompleteDestination.getPlace();
+      if (place.geometry?.location) {
+        setDestination(place.geometry.location);
+      }
+    });
   };
+
+  useEffect(() => {
+    if (
+      origin &&
+      destination &&
+      directionsServiceRef.current &&
+      directionsRendererRef.current
+    ) {
+      const wp = waypoints
+        .filter((wp) => wp.location)
+        .map((wp) => ({ location: wp.location, stopover: true }));
+
+      directionsServiceRef.current.route(
+        {
+          origin,
+          destination,
+          waypoints: wp,
+          travelMode: window.google.maps.TravelMode.DRIVING,
+          unitSystem: window.google.maps.UnitSystem.METRIC,
+          drivingOptions: {
+            departureTime: new Date(),
+            trafficModel: "bestguess",
+          },
+          provideRouteAlternatives: true,
+        },
+        (result, status) => {
+          if (status === window.google.maps.DirectionsStatus.OK) {
+            directionsRendererRef.current.setDirections(result);
+          } else {
+            console.error("Directions request failed due to " + status);
+          }
+        }
+      );
+    } else if (directionsRendererRef.current) {
+      directionsRendererRef.current.setDirections(null);
+    }
+  }, [origin, destination, waypoints]);
 
   const handleAddWaypoint = () => {
     const id = `waypoint-${Date.now()}`;
-    const newWaypoint = { id, ref: React.createRef() };
-    setWaypoints((prev) => [...prev, newWaypoint]);
+    setWaypoints((prev) => [...prev, { id, location: null }]);
   };
 
   useEffect(() => {
@@ -119,20 +118,17 @@ export default function MapboxGoogleHybrid() {
       const input = document.getElementById(newWaypoint.id);
       if (input) {
         const autocomplete = new window.google.maps.places.Autocomplete(input);
-        const listener = autocomplete.addListener("place_changed", () => {
+        autocomplete.addListener("place_changed", () => {
           const place = autocomplete.getPlace();
           if (place.geometry?.location) {
-            const { lat, lng } = place.geometry.location;
-            const waypointIndex = waypoints.findIndex(
-              (wp) => wp.id === newWaypoint.id
+            const location = place.geometry.location;
+            setWaypoints((prev) =>
+              prev.map((wp) =>
+                wp.id === newWaypoint.id ? { ...wp, location } : wp
+              )
             );
-            directionsRef.current.addWaypoint(waypointIndex, [lng(), lat()]);
           }
         });
-        setWaypointInputs((prev) => ({
-          ...prev,
-          [newWaypoint.id]: { autocomplete, listener },
-        }));
       }
     }
   }, [waypoints]);
@@ -140,9 +136,8 @@ export default function MapboxGoogleHybrid() {
   return (
     <div style={{ position: "relative", width: "100%", height: "80vh" }}>
       <style>{`
-        .mapboxgl-ctrl-top-left .mapboxgl-ctrl { margin-top: 150px; margin-left: 10px; }
-        .mapbox-directions-instructions { background-color: #ffffff4b; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 1); }
-        .mapbox-directions-route-summary h1 { color: #3e69b8ff; }
+        #directions-panel { background-color: #ffffff4b; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 1); padding: 10px; max-height: 300px; overflow: auto; }
+        #directions-panel h2 { color: #3e69b8ff; }
       `}</style>
       <div
         style={{
@@ -209,6 +204,7 @@ export default function MapboxGoogleHybrid() {
         >
           Add Waypoint
         </button>
+        <div id="directions-panel" />
       </div>
       <div
         ref={mapContainerRef}
