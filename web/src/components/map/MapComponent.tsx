@@ -9,6 +9,7 @@ import { MapPin, Navigation } from "lucide-react";
 import Controls from "./controls/Controls";
 import { useMapState } from "../../hooks/useMapState";
 import SrcMap from "./SrcMap";
+import UserMarkers from "./markers/UserMarkers";
 
 const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
@@ -273,6 +274,7 @@ const WrappedMap = (props: ReturnType<typeof useMapState>) => {
           </div>
         </InfoWindow>
       )}
+      <UserMarkers />
     </>
   );
 };

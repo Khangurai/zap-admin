@@ -1,0 +1,6 @@
+car_number,driver,capacity,routes,image_url,avatar_url
+YGN-7A/1234,U Aung Aung,16,"Route 1","https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png","https://api.dicebear.com/7.x/miniavs/svg?seed=1"
+YGN-7B/5678,U Hla Hla,16,"Route 2","https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png","https://api.dicebear.com/7.x/miniavs/svg?seed=2"
+YGN-7C/4321,Ko Ko Lwin,16,"Route 3","https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png","https://api.dicebear.com/7.x/miniavs/svg?seed=3"
+YGN-7D/8765,U Thin Thin,16,"Route 4","https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png","https://api.dicebear.com/7.x/miniavs/svg?seed=4"
+YGN-7E/9999,Maung Maung,16,"Route 5","https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png","https://api.dicebear.com/7.x/miniavs/svg?seed=5"

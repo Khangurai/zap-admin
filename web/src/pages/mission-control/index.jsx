@@ -1,142 +1,224 @@
 import React, { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { supabase } from "../../../server/supabase/supabaseClient";
+import MapboxDirections from "@mapbox/mapbox-gl-directions/dist/mapbox-gl-directions";
+import "@mapbox/mapbox-gl-directions/dist/mapbox-gl-directions.css";
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
+const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
-const DEFAULT_CENTER = { lat: 16.8409, lng: 96.1735 };
-const ZOOM_LEVEL = 12;
+export default function MapboxGoogleHybrid() {
+  const mapContainerRef = useRef(null);
+  const mapRef = useRef(null);
+  const directionsRef = useRef(null);
+  const [waypoints, setWaypoints] = useState([]);
+  const [waypointInputs, setWaypointInputs] = useState({});
 
-const Index = () => {
-  const mapContainer = useRef(null);
-  const map = useRef(null);
-  const markersRef = useRef([]);
-  const [users, setUsers] = useState([]);
-
-  // Fetch users from Supabase
   useEffect(() => {
-    const fetchUsers = async () => {
-      const { data, error } = await supabase
-        .from("users")
-        .select("id, name, team_code, latitude, longitude, location");
-
-      if (error) {
-        console.error("Error fetching users:", error);
-        return;
-      }
-
-      const parsedUsers = data
-        .map((user) => {
-          let lat, lng;
-
-          // Prefer explicit latitude/longitude
-          if (user.latitude !== null && user.longitude !== null) {
-            lat = parseFloat(user.latitude);
-            lng = parseFloat(user.longitude);
-          }
-          // Fallback: parse PostGIS `location` (assumed EWKT like: "POINT(longitude latitude)")
-          else if (user.location) {
-            try {
-              const match = user.location.match(
-                /POINT\s*\(\s*([^\s]+)\s+([^\)]+)/
-              );
-              if (match) {
-                lng = parseFloat(match[1]);
-                lat = parseFloat(match[2]);
-              }
-            } catch (err) {
-              console.error("Failed to parse location:", user.location, err);
-            }
-          }
-
-          return {
-            id: user.id,
-            name: user.name || "Unknown",
-            team_code: user.team_code,
-            lat,
-            lng,
-          };
-        })
-        .filter((user) => user.lat && user.lng); // Only keep valid coordinates
-
-      setUsers(parsedUsers);
-    };
-
-    fetchUsers();
-  }, []);
-
-  // Initialize map and add markers
-  useEffect(() => {
-    if (map.current) return; // Prevent re-initialization
-
-    // Determine initial center
-    const hasValidUsers = users.length > 0;
-    const center = hasValidUsers
-      ? [users[0].lng, users[0].lat] // Use first user
-      : [DEFAULT_CENTER.lng, DEFAULT_CENTER.lat];
-
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: "mapbox://styles/mapbox/streets-v11",
-      center,
-      zoom: ZOOM_LEVEL,
+    const map = new mapboxgl.Map({
+      container: mapContainerRef.current,
+      style: "mapbox://styles/mapbox/streets-v12",
+      center: [96.15, 16.8], // Yangon
+      zoom: 12,
     });
+    mapRef.current = map;
 
-    map.current.addControl(new mapboxgl.NavigationControl());
-
-    // Add markers once map is loaded
-    map.current.on("load", () => {
-      addMarkersToMap(users);
+    const directions = new MapboxDirections({
+      accessToken: mapboxgl.accessToken,
+      unit: "metric",
+      profile: "mapbox/driving-traffic",
+      controls: { inputs: false, instructions: true },
+      styles: [
+        {
+          id: "directions-route-line-alt",
+          type: "line",
+          source: "directions",
+          layout: { "line-cap": "round", "line-join": "round" },
+          paint: { "line-color": "#4882c5", "line-width": 8 },
+          filter: [
+            "all",
+            ["in", "$type", "LineString"],
+            ["in", "route", "alternate"],
+          ],
+        },
+        {
+          id: "directions-route-line-casing",
+          type: "line",
+          source: "directions",
+          layout: { "line-cap": "round", "line-join": "round" },
+          paint: { "line-color": "#2d5f9a", "line-width": 12 },
+          filter: [
+            "all",
+            ["in", "$type", "LineString"],
+            ["in", "route", "selected"],
+          ],
+        },
+        {
+          id: "directions-route-line",
+          type: "line",
+          source: "directions",
+          layout: { "line-cap": "round", "line-join": "round" },
+          paint: { "line-color": "#4882c5", "line-width": 8 },
+          filter: [
+            "all",
+            ["in", "$type", "LineString"],
+            ["in", "route", "selected"],
+          ],
+        },
+      ],
     });
+    directionsRef.current = directions;
+    map.addControl(directions, "top-left");
 
-    // Cleanup on unmount
-    return () => {
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
-      }
-      markersRef.current.forEach((marker) => marker.remove());
-      markersRef.current = [];
-    };
-  }, [users]); // Re-run when users change
-
-  // Function to add markers
-  const addMarkersToMap = (users) => {
-    // Remove existing markers
-    markersRef.current.forEach((marker) => marker.remove());
-    markersRef.current = [];
-
-    if (users.length === 0) {
-      new mapboxgl.Marker({ color: "gray" })
-        .setLngLat([DEFAULT_CENTER.lng, DEFAULT_CENTER.lat])
-        .setPopup(new mapboxgl.Popup().setText("No users available"))
-        .addTo(map.current);
-      return;
+    if (!window.google) {
+      const googleScript = document.createElement("script");
+      googleScript.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_API_KEY}&libraries=places`;
+      googleScript.async = true;
+      googleScript.defer = true;
+      document.body.appendChild(googleScript);
+      googleScript.onload = () => setupAutocomplete();
+    } else {
+      setupAutocomplete();
     }
 
-    const bounds = new mapboxgl.LngLatBounds();
+    return () => map.remove();
+  }, []);
 
-    users.forEach((user) => {
-      const { lat, lng, name, team_code } = user;
-      const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(
-        `<strong>${name}</strong><br/>Team: ${team_code || "N/A"}`
-      );
+  const setupAutocomplete = () => {
+    const originInput = document.getElementById("origin-input");
+    const destinationInput = document.getElementById("destination-input");
 
-      const marker = new mapboxgl.Marker({ color: "#3b9ddd" })
-        .setLngLat([lng, lat])
-        .setPopup(popup)
-        .addTo(map.current);
+    const setupListener = (input, setter) => {
+      const autocomplete = new window.google.maps.places.Autocomplete(input);
+      autocomplete.addListener("place_changed", () => {
+        const place = autocomplete.getPlace();
+        if (place.geometry?.location) {
+          const { lat, lng } = place.geometry.location;
+          setter([lng(), lat()]);
+        }
+      });
+    };
 
-      markersRef.current.push(marker);
-      bounds.extend([lng, lat]);
-    });
-
-    // Fit map to show all markers
-    map.current.fitBounds(bounds, { padding: 60, maxZoom: 15 });
+    setupListener(originInput, (coords) =>
+      directionsRef.current.setOrigin(coords)
+    );
+    setupListener(destinationInput, (coords) =>
+      directionsRef.current.setDestination(coords)
+    );
   };
 
-  return <div ref={mapContainer} style={{ width: "100%", height: "600px" }} />;
-};
+  const handleAddWaypoint = () => {
+    const id = `waypoint-${Date.now()}`;
+    const newWaypoint = { id, ref: React.createRef() };
+    setWaypoints((prev) => [...prev, newWaypoint]);
+  };
 
-export default Index;
+  useEffect(() => {
+    if (waypoints.length > 0 && window.google) {
+      const newWaypoint = waypoints[waypoints.length - 1];
+      const input = document.getElementById(newWaypoint.id);
+      if (input) {
+        const autocomplete = new window.google.maps.places.Autocomplete(input);
+        const listener = autocomplete.addListener("place_changed", () => {
+          const place = autocomplete.getPlace();
+          if (place.geometry?.location) {
+            const { lat, lng } = place.geometry.location;
+            const waypointIndex = waypoints.findIndex(
+              (wp) => wp.id === newWaypoint.id
+            );
+            directionsRef.current.addWaypoint(waypointIndex, [lng(), lat()]);
+          }
+        });
+        setWaypointInputs((prev) => ({
+          ...prev,
+          [newWaypoint.id]: { autocomplete, listener },
+        }));
+      }
+    }
+  }, [waypoints]);
+
+  return (
+    <div style={{ position: "relative", width: "100%", height: "80vh" }}>
+      <style>{`
+        .mapboxgl-ctrl-top-left .mapboxgl-ctrl { margin-top: 150px; margin-left: 10px; }
+        .mapbox-directions-instructions { background-color: #ffffff4b; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 1); }
+        .mapbox-directions-route-summary h1 { color: #3e69b8ff; }
+      `}</style>
+      <div
+        style={{
+          position: "absolute",
+          top: "10px",
+          left: "10px",
+          zIndex: 1,
+          backgroundColor: "white",
+          padding: "10px",
+          borderRadius: "8px",
+          boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+          display: "flex",
+          flexDirection: "column",
+          gap: "10px",
+          width: "320px",
+        }}
+      >
+        <input
+          id="origin-input"
+          type="text"
+          placeholder="Choose a starting point..."
+          style={{
+            width: "300px",
+            padding: "10px",
+            border: "1px solid #ddd",
+            borderRadius: "4px",
+          }}
+        />
+        {waypoints.map((wp) => (
+          <input
+            key={wp.id}
+            id={wp.id}
+            type="text"
+            placeholder="Add a stop..."
+            style={{
+              width: "300px",
+              padding: "10px",
+              border: "1px solid #ddd",
+              borderRadius: "4px",
+            }}
+          />
+        ))}
+        <input
+          id="destination-input"
+          type="text"
+          placeholder="Choose a destination..."
+          style={{
+            width: "300px",
+            padding: "10px",
+            border: "1px solid #ddd",
+            borderRadius: "4px",
+          }}
+        />
+        <button
+          onClick={handleAddWaypoint}
+          style={{
+            padding: "10px",
+            border: "none",
+            borderRadius: "4px",
+            backgroundColor: "#4882c5",
+            color: "white",
+            cursor: "pointer",
+          }}
+        >
+          Add Waypoint
+        </button>
+      </div>
+      <div
+        ref={mapContainerRef}
+        style={{
+          width: "100%",
+          height: "100%",
+          borderRadius: "8px",
+          overflow: "hidden",
+        }}
+      />
+    </div>
+  );
+}

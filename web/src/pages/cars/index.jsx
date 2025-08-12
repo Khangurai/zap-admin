@@ -258,7 +258,7 @@ const EditableCell = ({
   return <td {...restProps}>{childNode}</td>;
 };
 
-const CarsTable = () => {
+const CarsMgmt = () => {
   const [cars, setCars] = useState([]);
 
   useEffect(() => {
@@ -381,4 +381,4 @@ const CarsTable = () => {
   );
 };
 
-export default CarsTable;
+export default CarsMgmt;
