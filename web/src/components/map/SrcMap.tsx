@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Map, useMap } from "@vis.gl/react-google-maps";
 
-const DEFAULT_CENTER = { lat: 16.8409, lng: 96.1735 };
+const DEFAULT_CENTER = { lat: 16.7917570665414, lng: 96.16433501812011 };
 
 const SrcMap = ({ children, onMapClick }) => {
   const map = useMap();
   const [mapTypeControlOptions, setMapTypeControlOptions] = useState(undefined);
-  const [fullscreenControlOptions, setFullscreenControlOptions] = useState(undefined);
+  const [fullscreenControlOptions, setFullscreenControlOptions] =
+    useState(undefined);
 
   useEffect(() => {
     if (map) {

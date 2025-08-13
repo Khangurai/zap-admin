@@ -26,12 +26,14 @@ import {
   Check,
   Milestone,
   Clock,
+  Users,
 } from "lucide-react";
 import PlaceAutocomplete from "./PlaceAutocomplete";
 import { DraggableWaypoint } from "../markers/DraggableWaypoint";
 import { WaypointOverlay } from "../markers/WaypointOverlay";
 import copy from "copy-to-clipboard";
 import StarsCanvas from "../../starBackground"; // ✅ Import StarsCanvas
+import MarkersReloadButton from "../markers/MarkersReloadButton";
 
 interface ControlsProps {
   handleOriginSelect: (place: google.maps.places.PlaceResult | null) => void;
@@ -68,6 +70,7 @@ const Controls = ({
   totalDuration,
   directions,
   savedRouteGeoJSON,
+  onReloadMarkers = { handleReloadMarkers },
 }: ControlsProps) => {
   const map = useMap();
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -379,7 +382,19 @@ const Controls = ({
 
       {/* Center Button */}
       <MapControl position={ControlPosition.RIGHT_BOTTOM}>
-        <div style={{ margin: "16px" }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "10px",
+            margin: "10px",
+            alignItems: "flex-end",
+          }}
+        >
+          {/* Replace Users button with MarkersReloadButton */}
+          <MarkersReloadButton onReload={onReloadMarkers} />
+
+          {/* Other buttons */}
           <Button
             icon={<Navigation size={16} />}
             onClick={centerOnYangon}
@@ -387,8 +402,15 @@ const Controls = ({
               background: "rgba(255, 255, 255, 0.68)",
               border: "1px solid #ddd",
               borderRadius: "8px",
-              boxShadow: "0 4px 10px rgba(0,0,0,0.15)",
+              boxShadow: "0 4px 10px rgba(0, 0, 0, 0.15)",
               backdropFilter: "blur(10px)",
+              height: "40px",
+              padding: "0 12px",
+              display: "flex",
+              alignItems: "center",
+              fontSize: "14px",
+              fontWeight: 500,
+              color: "#1f2937",
             }}
           >
             Center on Yangon

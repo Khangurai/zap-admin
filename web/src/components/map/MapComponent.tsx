@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   APIProvider,
   AdvancedMarker,
   InfoWindow,
+  ControlPosition,
+  MapControl,
 } from "@vis.gl/react-google-maps";
 import { WaypointMarker } from "./markers/WaypointMarker";
 import { MapPin, Navigation } from "lucide-react";
@@ -10,6 +12,7 @@ import Controls from "./controls/Controls";
 import { useMapState } from "../../hooks/useMapState";
 import SrcMap from "./SrcMap";
 import UserMarkers from "./markers/UserMarkers";
+import MarkersReloadButton from "./markers/MarkersReloadButton";
 
 const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
@@ -107,7 +110,14 @@ const WrappedMap = (props: ReturnType<typeof useMapState>) => {
     fetchDirections,
     saveRouteAsGeoJSON,
     clearRoute,
+    
   } = props;
+
+  const [reloadKey, setReloadKey] = useState(0);
+
+  const handleReloadMarkers = () => {
+    setReloadKey((prev) => prev + 1); // change reloadKey triggers UserMarkers reload
+  };
 
   return (
     <>
@@ -127,6 +137,7 @@ const WrappedMap = (props: ReturnType<typeof useMapState>) => {
         saveRoute={saveRouteAsGeoJSON}
         clearRoute={clearRoute}
         savedRouteGeoJSON={savedRouteGeoJSON}
+        onReloadMarkers={handleReloadMarkers}
       />
 
       {origin && (
@@ -274,7 +285,10 @@ const WrappedMap = (props: ReturnType<typeof useMapState>) => {
           </div>
         </InfoWindow>
       )}
-      <UserMarkers />
+      
+
+      {/* pass reloadKey to UserMarkers */}
+      <UserMarkers reloadKey={reloadKey} />
     </>
   );
 };
