@@ -64,7 +64,7 @@ const Drivers = () => {
   return (
     <Select
       mode="multiple"
-      style={{ width: "100%" }}
+      style={{ width: "50%" }}
       placeholder="Select drivers"
       value={selectedItems.map((item) => item.key)}
       tagRender={(props) => {

@@ -13,8 +13,6 @@ import RouterGenerator from "./pages/map-tracking/MapTracking";
 import Profile from "./pages/user-profile/profile";
 import { MapIcon } from "lucide-react";
 
-
-
 const App = () => {
   return (
     <BrowserRouter>

@@ -1,137 +1,325 @@
-import React, { useState, useMemo } from "react";
-import { Select, Tag, Table, Divider } from "antd";
+import React, { useState, useEffect, useRef } from "react";
+import { Select, Table, Tag } from "antd";
+import { createStyles } from "antd-style";
+import { CloseOutlined } from "@ant-design/icons";
+import dataSource from "./dataSource";
 
-// Ant Design preset colors
-const presetColors = [
-  "magenta", "red", "volcano", "orange", "gold",
-  "lime", "green", "cyan", "blue", "geekblue", "purple"
-];
+import {
+  closestCenter,
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  rectSortingStrategy,
+  SortableContext,
+  useSortable,
+} from "@dnd-kit/sortable";
 
-// Data with random tag colors
-const mockData = [
-  { key: "TEAM194", name: "Aung Kyaw", location: "16.776474, 96.171004" },
-  { key: "TEAM432", name: "Kyaw Thaung", location: "16.77122, 96.175772" },
-  { key: "TEAM820", name: "Zaw Min", location: "16.776539, 96.168959" },
-  { key: "TEAM286", name: "Mya Hnin", location: "16.778781, 96.16733" },
-  { key: "TEAM698", name: "Ko Ko", location: "16.78585, 96.161588" },
-  { key: "TEAM851", name: "Aye Chan", location: "16.786012, 96.14788" },
-  { key: "TEAM344", name: "Soe Win", location: "16.779877, 96.143969" },
-  { key: "TEAM289", name: "Hla Hla", location: "16.780137, 96.13744" },
-  { key: "TEAM570", name: "Thura", location: "16.780642, 96.131666" },
-  { key: "TEAM517", name: "Than Myint", location: "16.793038, 96.122994" },
-  { key: "TEAM363", name: "Moe Moe", location: "16.802123, 96.122292" },
-  { key: "TEAM627", name: "Aung Aung", location: "16.803815, 96.12437" },
-  { key: "TEAM795", name: "Khin Khin", location: "16.803723, 96.133336" },
-  { key: "TEAM544", name: "Nay Lin", location: "16.804693, 96.133012" },
-  { key: "TEAM719", name: "Wai Yan", location: "16.815558, 96.128566" },
-].map(item => ({
-  ...item,
-  tagColor: presetColors[Math.floor(Math.random() * presetColors.length)]
-}));
+const commonStyle = {
+  cursor: "move",
+  transition: "unset",
+  borderRadius: 4,
+};
 
-// Table columns
-const columns = [
-  { dataIndex: "name", title: "Name", width: 150 },
-  { dataIndex: "location", title: "Location (lat, long)", width: 200 },
-];
+const useStyle = createStyles(({ css, token }) => {
+  const { antCls } = token;
+  return {
+    customTable: css`
+      ${antCls}-table-container {
+        ${antCls}-table-body {
+          max-height: 300px;
+          overflow: auto;
+          scrollbar-width: thin;
+        }
+        
+        ${antCls}-table-thead > tr > th {
+          background: #fafafa;
+          font-weight: 500;
+        }
+      }
+    `,
+    activeRow: css`
+      background-color: #e6f7ff !important;
+    `,
+    selectContainer: css`
+      ${antCls}-select-selection-overflow {
+        gap: 8px !important;
+        align-items: flex-start !important;
+      }
+      
+      ${antCls}-select-selection-overflow-item {
+        margin: 2px !important;
+        align-self: flex-start !important;
+      }
+      
+      ${antCls}-select-selector {
+        padding: 6px 11px !important;
+        min-height: auto !important;
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: flex-start !important;
+      }
+      
+      ${antCls}-select-selection-search {
+        margin: 0 !important;
+        align-self: flex-start !important;
+      }
+      
+      ${antCls}-select-selection-search-input {
+        height: 24px !important;
+        line-height: 24px !important;
+      }
+    `,
+  };
+});
 
-// Custom tag render for Select
-const tagRender = ({ label, value, closable, onClose }) => {
-  const item = mockData.find((i) => i.key === value);
+const DraggableTag = ({ tag, onRemove }) => {
+  const { listeners, transform, transition, isDragging, setNodeRef } =
+    useSortable({
+      id: tag.id,
+    });
+
+  const style = transform
+    ? {
+        ...commonStyle,
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        transition: isDragging ? "unset" : transition,
+        opacity: isDragging ? 0.8 : 1,
+        backgroundColor: isDragging ? "#f0f9ff" : "#ffffff",
+        border: isDragging ? "2px dashed #1890ff" : "1px solid #d9d9d9",
+        display: "inline-flex",
+        alignItems: "center",
+        padding: "4px 8px",
+        height: 24,
+        lineHeight: "16px",
+        fontSize: 12,
+        margin: 2,
+      }
+    : {
+        ...commonStyle,
+        opacity: 1,
+        display: "inline-flex",
+        alignItems: "center",
+        padding: "4px 8px",
+        height: 24,
+        lineHeight: "16px",
+        fontSize: 12,
+        margin: 2,
+        backgroundColor: "#fafafa",
+        border: "1px solid #d9d9d9",
+      };
+
   const onPreventMouseDown = (event) => {
     event.preventDefault();
     event.stopPropagation();
   };
+
   return (
     <Tag
-      color={item ? item.tagColor : "blue"}
-      onMouseDown={onPreventMouseDown}
-      closable={closable}
-      onClose={onClose}
-      style={{ marginInlineEnd: 4 }}
+      ref={setNodeRef}
+      style={style}
+      closable
+      onClose={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onRemove(tag.id);
+      }}
+      closeIcon={
+        <span 
+          onMouseDown={onPreventMouseDown}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            fontSize: 12,
+            color: "#999",
+          }}
+        >
+          <CloseOutlined />
+        </span>
+      }
     >
-      {item ? item.name : label}
+      <span
+        {...listeners}
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          cursor: "grab",
+          fontSize: 10,
+          color: "#666",
+          marginRight: 2,
+        }}
+        onMouseDown={(e) => e.stopPropagation()}
+      >
+        ⠿
+      </span>
+      <span style={{ fontSize: 12 }}>
+        {tag.text}
+      </span>
     </Tag>
   );
 };
 
-const Drivers = ({ onItemSelect, onItemSelectAll }) => {
-  const [selectedKeys, setSelectedKeys] = useState([]);
+const columns = [
+  { title: "Name", dataIndex: "name", key: "name", width: 150 },
+  { title: "Location", dataIndex: "location", key: "location" },
+];
+
+const TeamSelect = () => {
+  const { styles } = useStyle();
+  const [selectedNames, setSelectedNames] = useState([]);
   const [searchText, setSearchText] = useState("");
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const [activeId, setActiveId] = useState(null);
+  const tableRef = useRef(null);
+  const sensors = useSensors(useSensor(PointerSensor));
 
-  const filteredData = useMemo(() => {
-    if (!searchText) return mockData;
-    return mockData.filter(
-      (item) =>
-        item.name.toLowerCase().includes(searchText.toLowerCase()) ||
-        item.location.toLowerCase().includes(searchText.toLowerCase())
-    );
-  }, [searchText]);
+  const filteredData = dataSource.filter((item) =>
+    item.name.toLowerCase().includes(searchText.toLowerCase())
+  );
 
-  const handleRowSelect = (record) => {
-    const exists = selectedKeys.includes(record.key);
-    let newKeys = exists
-      ? selectedKeys.filter((k) => k !== record.key)
-      : [...selectedKeys, record.key];
-    setSelectedKeys(newKeys);
-    onItemSelect && onItemSelect(record, !exists, newKeys);
+  const rowSelection = {
+    selectedRowKeys: selectedNames,
+    onChange: (keys) => setSelectedNames(keys),
+    preserveSelectedRowKeys: true,
   };
 
-  const handleSelectAll = () => {
-    const filteredKeys = filteredData.map((d) => d.key);
-    const allSelected = filteredKeys.every((key) => selectedKeys.includes(key));
-    let newKeys = allSelected
-      ? selectedKeys.filter((k) => !filteredKeys.includes(k))
-      : Array.from(new Set([...selectedKeys, ...filteredKeys]));
-    setSelectedKeys(newKeys);
-    onItemSelectAll && onItemSelectAll(filteredData, !allSelected, newKeys);
+  const handleInputKeyDown = (e) => {
+    if (!filteredData.length) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIndex((prev) => Math.min(prev + 1, filteredData.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIndex((prev) => Math.max(prev - 1, 0));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (activeIndex >= 0 && activeIndex < filteredData.length) {
+        const name = filteredData[activeIndex].name;
+        setSelectedNames((prev) =>
+          prev.includes(name) ? prev.filter((v) => v !== name) : [...prev, name]
+        );
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (tableRef.current && activeIndex >= 0) {
+      const rows = tableRef.current.querySelectorAll("tr.ant-table-row");
+      const row = rows[activeIndex];
+      if (row) row.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+  }, [activeIndex]);
+
+  const handleDragStart = (event) => {
+    setActiveId(event.active.id);
+  };
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    if (!over) {
+      setActiveId(null);
+      return;
+    }
+    if (active.id !== over.id) {
+      setSelectedNames((data) => {
+        const oldIndex = data.findIndex((item) => item === active.id);
+        const newIndex = data.findIndex((item) => item === over.id);
+        return arrayMove(data, oldIndex, newIndex);
+      });
+    }
+    setActiveId(null);
+  };
+
+  const handleRemove = (id) => {
+    setSelectedNames((prev) => prev.filter((item) => item !== id));
+  };
+
+  const activeItem = selectedNames.find((item) => item === activeId);
+
+  const tagRender = (props) => {
+    const { value } = props;
+    return (
+      <DraggableTag
+        key={value}
+        tag={{ id: value, text: value }}
+        onRemove={handleRemove}
+      />
+    );
   };
 
   return (
-    <Select
-      mode="multiple"
-      style={{ width: 500 }}
-      placeholder="Add Waypoints"
-      value={selectedKeys}
-      tagRender={tagRender}
-      onChange={(keys) => setSelectedKeys(keys)}
-      showSearch
-      onSearch={(value) => setSearchText(value)}
-      dropdownRender={() => (
-        <div style={{ padding: 4, maxHeight: 300, overflowY: "auto", width: 500 }}>
-          <div
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <SortableContext items={selectedNames} strategy={rectSortingStrategy}>
+        <Select
+          mode="multiple"
+          tagRender={tagRender}
+          value={selectedNames}
+          placeholder="Select team members"
+          className={styles.selectContainer}
+          style={{
+            width: "100%",
+            maxWidth: 600,
+            minHeight: 32,
+          }}
+          dropdownRender={() => (
+            <div style={{ padding: 8 }} ref={tableRef}>
+              <Table
+                size="small"
+                columns={columns}
+                dataSource={filteredData}
+                rowKey="name"
+                rowSelection={rowSelection}
+                pagination={{ pageSize: 10 }}
+                scroll={{ y: 55 * 5 }}
+                className={styles.customTable}
+                rowClassName={(record, index) =>
+                  index === activeIndex ? styles.activeRow : ""
+                }
+              />
+            </div>
+          )}
+          showSearch
+          onSearch={setSearchText}
+          onChange={(values) => setSelectedNames(values)}
+          onInputKeyDown={handleInputKeyDown}
+          dropdownStyle={{ zIndex: 999, minWidth: 300 }}
+        />
+      </SortableContext>
+
+      <DragOverlay>
+        {activeId ? (
+          <Tag
             style={{
+              ...commonStyle,
+              display: "inline-flex",
+              alignItems: "center",
               padding: "4px 8px",
-              display: "flex",
-              justifyContent: "space-between",
+              height: 24,
+              lineHeight: "16px",
+              fontSize: 12,
+              whiteSpace: "nowrap",
+              boxShadow: "0 4px 12px rgba(0,0,45,0.15)",
+              backgroundColor: "#ffffff",
+              border: "1px solid #1890ff",
+              zIndex: 1000,
             }}
           >
-            <span>
-              {selectedKeys.length}/{mockData.length} items selected
-            </span>
-          </div>
-          <Divider style={{ margin: "4px 0" }} />
-          <Table
-            rowSelection={{
-              selectedRowKeys: selectedKeys,
-              onSelect: handleRowSelect,
-              onSelectAll: () => handleSelectAll(),
-            }}
-            columns={columns}
-            dataSource={filteredData}
-            pagination={false}
-            size="small"
-            rowKey="key"
-            scroll={{ y: 200 }}
-            onRow={(record) => ({
-              onClick: () => handleRowSelect(record),
-              tabIndex: 0,
-            })}
-          />
-        </div>
-      )}
-    />
+            <span style={{ fontSize: 10, color: "#666" }}>⠿</span>
+            <span>{activeItem}</span>
+          </Tag>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   );
 };
 
-export default Drivers;
+export default TeamSelect;
