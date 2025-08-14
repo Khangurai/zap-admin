@@ -32,6 +32,9 @@ export const useMapState = () => {
     fetchDirections,
     directionsRenderer,
     setDirections,
+    optimizeWaypoints,
+    setOptimizeWaypoints,
+    waypointOrder, // New: Get optimized order
   } = useDirections(origin, destination, waypoints);
 
   const [savedRouteGeoJSON, setSavedRouteGeoJSON] = useState<string | null>(
@@ -71,6 +74,19 @@ export const useMapState = () => {
     }
   }, [origin, destination, waypoints, map]);
 
+  // New: Reorder waypoints based on optimized order
+  useEffect(() => {
+    if (waypointOrder.length > 0 && waypoints.length > 0) {
+      setWaypoints((prevWaypoints) => {
+        let newWaypoints = [...prevWaypoints];
+        waypointOrder.forEach((newIndex, originalIndex) => {
+          newWaypoints = arrayMove(newWaypoints, originalIndex, newIndex);
+        });
+        return newWaypoints;
+      });
+    }
+  }, [waypointOrder]);
+
   const [waypointInfowindows, setWaypointInfowindows] = useState<{
     [id: string]: boolean;
   }>({});
@@ -105,6 +121,7 @@ export const useMapState = () => {
       return newWaypointInfowindowsState;
     });
   }, []);
+
   const handleWaypointInfoWindowClose = (id?: string) => {
     if (id) {
       setWaypointInfowindows((prev) => ({
@@ -350,6 +367,8 @@ export const useMapState = () => {
     setTravelMode,
     saveRouteAsGeoJSON,
     clearRoute,
+    optimizeWaypoints,
+    setOptimizeWaypoints,
+    waypointOrder,
   };
 };
-

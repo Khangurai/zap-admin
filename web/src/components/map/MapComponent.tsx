@@ -38,7 +38,6 @@ const MapRoot = () => {
   );
 };
 
-// Custom marker components
 const OriginMarkerContent = () => (
   <div
     style={{
@@ -110,13 +109,14 @@ const WrappedMap = (props: ReturnType<typeof useMapState>) => {
     fetchDirections,
     saveRouteAsGeoJSON,
     clearRoute,
-    
+    optimizeWaypoints, // New prop
+    setOptimizeWaypoints, // New prop
   } = props;
 
   const [reloadKey, setReloadKey] = useState(0);
 
   const handleReloadMarkers = () => {
-    setReloadKey((prev) => prev + 1); // change reloadKey triggers UserMarkers reload
+    setReloadKey((prev) => prev + 1);
   };
 
   return (
@@ -138,6 +138,8 @@ const WrappedMap = (props: ReturnType<typeof useMapState>) => {
         clearRoute={clearRoute}
         savedRouteGeoJSON={savedRouteGeoJSON}
         onReloadMarkers={handleReloadMarkers}
+        optimizeWaypoints={optimizeWaypoints} // Pass new prop
+        setOptimizeWaypoints={setOptimizeWaypoints} // Pass new prop
       />
 
       {origin && (
@@ -285,9 +287,7 @@ const WrappedMap = (props: ReturnType<typeof useMapState>) => {
           </div>
         </InfoWindow>
       )}
-      
 
-      {/* pass reloadKey to UserMarkers */}
       <UserMarkers reloadKey={reloadKey} />
     </>
   );

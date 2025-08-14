@@ -17,6 +17,8 @@ export const useDirections = (
     useState<google.maps.DirectionsService | null>(null);
   const [directionsRenderer, setDirectionsRenderer] =
     useState<google.maps.DirectionsRenderer | null>(null);
+  const [optimizeWaypoints, setOptimizeWaypoints] = useState(true); // New state for toggling optimization
+  const [waypointOrder, setWaypointOrder] = useState<number[]>([]); // Store optimized order
 
   const computeRouteDetails = (result: google.maps.DirectionsResult) => {
     let totalDistance = 0;
@@ -34,6 +36,7 @@ export const useDirections = (
 
     setTotalDistance((totalDistance / 1000).toFixed(2) + " km");
     setTotalDuration((totalDuration / 60).toFixed(2) + " min");
+    setWaypointOrder(myroute.waypoint_order || []); // Store optimized order
   };
 
   useEffect(() => {
@@ -42,6 +45,7 @@ export const useDirections = (
     } else {
       setTotalDistance(null);
       setTotalDuration(null);
+      setWaypointOrder([]);
     }
   }, [directions]);
 
@@ -90,12 +94,13 @@ export const useDirections = (
         location: waypoint.geometry.location,
         stopover: true,
       })),
-      optimizeWaypoints: false,
+      optimizeWaypoints, // Use the state variable
     };
 
     directionsService.route(request, (response, status) => {
       if (status === "OK") {
         directionsRenderer.setDirections(response);
+        setDirections(response);
       } else {
         console.error(`Directions request failed due to ${status}`);
       }
@@ -107,13 +112,8 @@ export const useDirections = (
     travelMode,
     directionsService,
     directionsRenderer,
+    optimizeWaypoints,
   ]);
-
-  useEffect(() => {
-    if (origin && destination) {
-      fetchDirections();
-    }
-  }, [origin, destination, waypoints, travelMode, fetchDirections]);
 
   return {
     directions,
@@ -124,5 +124,8 @@ export const useDirections = (
     fetchDirections,
     directionsRenderer,
     setDirections,
+    optimizeWaypoints,
+    setOptimizeWaypoints,
+    waypointOrder, // Return optimized order
   };
 };

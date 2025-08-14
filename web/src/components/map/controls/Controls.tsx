@@ -16,7 +16,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Button, Card, Tooltip, Row, Col, Statistic } from "antd";
+import { Button, Card, Tooltip, Row, Col, Statistic, Switch } from "antd";
 import {
   Navigation,
   MapPin,
@@ -32,7 +32,7 @@ import PlaceAutocomplete from "./PlaceAutocomplete";
 import { DraggableWaypoint } from "../markers/DraggableWaypoint";
 import { WaypointOverlay } from "../markers/WaypointOverlay";
 import copy from "copy-to-clipboard";
-import StarsCanvas from "../../starBackground"; // ✅ Import StarsCanvas
+import StarsCanvas from "../../starBackground";
 import MarkersReloadButton from "../markers/MarkersReloadButton";
 
 interface ControlsProps {
@@ -53,6 +53,9 @@ interface ControlsProps {
   totalDuration: string | null;
   directions: google.maps.DirectionsResult | null;
   savedRouteGeoJSON: string | null;
+  onReloadMarkers: () => void;
+  optimizeWaypoints: boolean; // New prop
+  setOptimizeWaypoints: (value: boolean) => void; // New prop
 }
 
 const Controls = ({
@@ -61,6 +64,7 @@ const Controls = ({
   handleWaypointSelect,
   reorderWaypoints,
   removeWaypoint,
+  fetchDirections,
   saveRoute,
   clearRoute,
   origin,
@@ -70,14 +74,15 @@ const Controls = ({
   totalDuration,
   directions,
   savedRouteGeoJSON,
-  onReloadMarkers = { handleReloadMarkers },
+  onReloadMarkers,
+  optimizeWaypoints,
+  setOptimizeWaypoints,
 }: ControlsProps) => {
   const map = useMap();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isCopied, setIsCopied] = useState(false);
 
   const sensors = useSensors(
-    // useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
@@ -118,15 +123,12 @@ const Controls = ({
 
   return (
     <>
-      {/* Route Planner Card */}
       <MapControl position={ControlPosition.LEFT_TOP}>
         <div style={{ position: "relative", width: "400px", margin: "16px" }}>
-          {/* StarsCanvas as background */}
           <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
             <StarsCanvas />
           </div>
 
-          {/* Card Content */}
           <Card
             size="small"
             style={{
@@ -157,7 +159,29 @@ const Controls = ({
             <div
               style={{ display: "flex", flexDirection: "column", gap: "14px" }}
             >
-              {/* Origin */}
+              {/* New: Toggle for Optimize Waypoints */}
+              <div>
+                <label
+                  style={{
+                    fontWeight: 600,
+                    fontSize: "13px",
+                    marginBottom: "4px",
+                    display: "flex",
+                    color: "#444",
+                  }}
+                >
+                  Optimize Waypoints
+                </label>
+                <Switch
+                  checked={optimizeWaypoints}
+                  onChange={(checked) => {
+                    setOptimizeWaypoints(checked);
+                    fetchDirections(); // Recalculate route
+                  }}
+                  disabled={!waypoints.length}
+                />
+              </div>
+
               <div>
                 <label
                   style={{
@@ -177,7 +201,6 @@ const Controls = ({
                 />
               </div>
 
-              {/* Waypoints */}
               <div>
                 <label
                   style={{
@@ -217,14 +240,6 @@ const Controls = ({
                         />
                       ))}
                     </SortableContext>
-                    {/* <DragOverlay>
-                      {activeWaypoint && (
-                        <WaypointOverlay
-                          waypoint={activeWaypoint}
-                          index={activeIndex}
-                        />
-                      )}
-                    </DragOverlay> */}
                     <DragOverlay adjustScale={false}>
                       {activeWaypoint && (
                         <div
@@ -249,7 +264,6 @@ const Controls = ({
                 placeholder="Add waypoint"
               />
 
-              {/* Destination */}
               <div>
                 <label
                   style={{
@@ -269,7 +283,6 @@ const Controls = ({
                 />
               </div>
 
-              {/* Actions */}
               <div style={{ display: "flex", gap: "10px" }}>
                 <Tooltip
                   title={
@@ -304,7 +317,6 @@ const Controls = ({
                 </Button>
               </div>
 
-              {/* Distance & Duration */}
               {(totalDistance || totalDuration) && (
                 <div
                   style={{
@@ -336,7 +348,6 @@ const Controls = ({
                 </div>
               )}
 
-              {/* GeoJSON */}
               {savedRouteGeoJSON && (
                 <div style={{ marginTop: "12px" }}>
                   <div
@@ -380,7 +391,6 @@ const Controls = ({
         </div>
       </MapControl>
 
-      {/* Center Button */}
       <MapControl position={ControlPosition.RIGHT_BOTTOM}>
         <div
           style={{
@@ -391,10 +401,8 @@ const Controls = ({
             alignItems: "flex-end",
           }}
         >
-          {/* Replace Users button with MarkersReloadButton */}
           <MarkersReloadButton onReload={onReloadMarkers} />
 
-          {/* Other buttons */}
           <Button
             icon={<Navigation size={16} />}
             onClick={centerOnYangon}
