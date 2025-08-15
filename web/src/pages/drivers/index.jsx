@@ -3,7 +3,6 @@ import { Select, Table, Tag } from "antd";
 import { createStyles } from "antd-style";
 import { CloseOutlined } from "@ant-design/icons";
 import dataSource from "./dataSource";
-
 import {
   closestCenter,
   DndContext,
@@ -18,6 +17,7 @@ import {
   SortableContext,
   useSortable,
 } from "@dnd-kit/sortable";
+import { MapPin, User } from "lucide-react";
 
 const commonStyle = {
   cursor: "move",
@@ -35,7 +35,7 @@ const useStyle = createStyles(({ css, token }) => {
           overflow: auto;
           scrollbar-width: thin;
         }
-        
+
         ${antCls}-table-thead > tr > th {
           background: #fafafa;
           font-weight: 500;
@@ -50,12 +50,12 @@ const useStyle = createStyles(({ css, token }) => {
         gap: 8px !important;
         align-items: flex-start !important;
       }
-      
+
       ${antCls}-select-selection-overflow-item {
         margin: 2px !important;
         align-self: flex-start !important;
       }
-      
+
       ${antCls}-select-selector {
         padding: 6px 11px !important;
         min-height: auto !important;
@@ -63,12 +63,12 @@ const useStyle = createStyles(({ css, token }) => {
         flex-wrap: wrap !important;
         align-items: flex-start !important;
       }
-      
+
       ${antCls}-select-selection-search {
         margin: 0 !important;
         align-self: flex-start !important;
       }
-      
+
       ${antCls}-select-selection-search-input {
         height: 24px !important;
         line-height: 24px !important;
@@ -129,7 +129,7 @@ const DraggableTag = ({ tag, onRemove }) => {
         onRemove(tag.id);
       }}
       closeIcon={
-        <span 
+        <span
           onMouseDown={onPreventMouseDown}
           style={{
             display: "inline-flex",
@@ -156,19 +156,17 @@ const DraggableTag = ({ tag, onRemove }) => {
       >
         ⠿
       </span>
-      <span style={{ fontSize: 12 }}>
-        {tag.text}
-      </span>
+      <span style={{ fontSize: 12 }}>{tag.text}</span>
     </Tag>
   );
 };
 
 const columns = [
-  { title: "Name", dataIndex: "name", key: "name", width: 150 },
-  { title: "Location", dataIndex: "location", key: "location" },
+  { title: <User />, dataIndex: "name", key: "name", width: 100 },
+  { title: <MapPin />, dataIndex: "location", key: "location" },
 ];
 
-const TeamSelect = () => {
+const waypointMultiSelect = () => {
   const { styles } = useStyle();
   const [selectedNames, setSelectedNames] = useState([]);
   const [searchText, setSearchText] = useState("");
@@ -267,10 +265,10 @@ const TeamSelect = () => {
           className={styles.selectContainer}
           style={{
             width: "100%",
-            maxWidth: 600,
+            maxWidth: 276,
             minHeight: 32,
           }}
-          dropdownRender={() => (
+          popupRender={(originNode) => (
             <div style={{ padding: 8 }} ref={tableRef}>
               <Table
                 size="small"
@@ -287,11 +285,19 @@ const TeamSelect = () => {
               />
             </div>
           )}
+          styles={{
+            popup: {
+              root: {
+                zIndex: 999,
+                minWidth: 276,
+              },
+            },
+          }}
           showSearch
           onSearch={setSearchText}
           onChange={(values) => setSelectedNames(values)}
           onInputKeyDown={handleInputKeyDown}
-          dropdownStyle={{ zIndex: 999, minWidth: 300 }}
+          // dropdownStyle={{ zIndex: 999, minWidth: 300 }}
         />
       </SortableContext>
 
@@ -313,7 +319,9 @@ const TeamSelect = () => {
               zIndex: 1000,
             }}
           >
-            <span style={{ fontSize: 10, color: "#666" }}>⠿</span>
+            <span style={{ fontSize: 10, color: "#666", marginRight: 4 }}>
+              ⠿
+            </span>
             <span>{activeItem}</span>
           </Tag>
         ) : null}
@@ -322,4 +330,4 @@ const TeamSelect = () => {
   );
 };
 
-export default TeamSelect;
+export default waypointMultiSelect;
