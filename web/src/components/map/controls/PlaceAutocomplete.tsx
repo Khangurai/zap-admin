@@ -16,7 +16,7 @@ const PlaceAutocomplete = ({
   placeholder = "Enter location",
 }: PlaceAutocompleteProps) => {
   const [placeAutocomplete, setPlaceAutocomplete] =
-    useState<google.maps.places.Autocomplete | null>(null);
+    useState<google.maps.places.PlaceAutocompleteElement | null>(null);
   const [geocoder, setGeocoder] = useState<google.maps.Geocoder | null>(null);
   const [inputValue, setInputValue] = useState<string>("");
   const inputRef = useRef<InputRef>(null);

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Select, Table, Tag } from "antd";
 import { createStyles } from "antd-style";
 import { CloseOutlined } from "@ant-design/icons";
-import dataSource from "./dataSource";
+import { supabase } from "../../../server/supabase/supabaseClient";
 import {
   closestCenter,
   DndContext,
@@ -19,11 +19,7 @@ import {
 } from "@dnd-kit/sortable";
 import { MapPin, User } from "lucide-react";
 
-const commonStyle = {
-  cursor: "move",
-  transition: "unset",
-  borderRadius: 4,
-};
+const commonStyle = { cursor: "move", transition: "unset", borderRadius: 4 };
 
 const useStyle = createStyles(({ css, token }) => {
   const { antCls } = token;
@@ -35,7 +31,6 @@ const useStyle = createStyles(({ css, token }) => {
           overflow: auto;
           scrollbar-width: thin;
         }
-
         ${antCls}-table-thead > tr > th {
           background: #fafafa;
           font-weight: 500;
@@ -50,12 +45,10 @@ const useStyle = createStyles(({ css, token }) => {
         gap: 8px !important;
         align-items: flex-start !important;
       }
-
       ${antCls}-select-selection-overflow-item {
         margin: 2px !important;
         align-self: flex-start !important;
       }
-
       ${antCls}-select-selector {
         padding: 6px 11px !important;
         min-height: auto !important;
@@ -63,12 +56,10 @@ const useStyle = createStyles(({ css, token }) => {
         flex-wrap: wrap !important;
         align-items: flex-start !important;
       }
-
       ${antCls}-select-selection-search {
         margin: 0 !important;
         align-self: flex-start !important;
       }
-
       ${antCls}-select-selection-search-input {
         height: 24px !important;
         line-height: 24px !important;
@@ -79,9 +70,7 @@ const useStyle = createStyles(({ css, token }) => {
 
 const DraggableTag = ({ tag, onRemove }) => {
   const { listeners, transform, transition, isDragging, setNodeRef } =
-    useSortable({
-      id: tag.id,
-    });
+    useSortable({ id: tag.id });
 
   const style = transform
     ? {
@@ -168,12 +157,40 @@ const columns = [
 
 const waypointMultiSelect = () => {
   const { styles } = useStyle();
+  const [dataSource, setDataSource] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [selectedNames, setSelectedNames] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [activeIndex, setActiveIndex] = useState(-1);
   const [activeId, setActiveId] = useState(null);
   const tableRef = useRef(null);
   const sensors = useSensors(useSensor(PointerSensor));
+  const [selectedNameLocations, setSelectedNameLocations] = useState([]);
+
+  // Fetch data from Supabase
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setLoading(true);
+      const { data: usersData, error } = await supabase
+        .from("users")
+        .select("id, name, longitude, latitude, status")
+        .not("longitude", "is", null)
+        .not("latitude", "is", null);
+
+      if (error) {
+        console.error("Error fetching users:", error);
+      } else if (usersData) {
+        const formatted = usersData.map((u) => ({
+          key: u.name,
+          name: u.name,
+          location: `${u.latitude}, ${u.longitude}`,
+        }));
+        setDataSource(formatted);
+      }
+      setLoading(false);
+    };
+    fetchUsers();
+  }, []);
 
   const filteredData = dataSource.filter((item) =>
     item.name.toLowerCase().includes(searchText.toLowerCase())
@@ -181,7 +198,17 @@ const waypointMultiSelect = () => {
 
   const rowSelection = {
     selectedRowKeys: selectedNames,
-    onChange: (keys) => setSelectedNames(keys),
+    onChange: (keys) => {
+      setSelectedNames(keys);
+
+      const arr = keys.map((name) => {
+        const location = dataSource.find((d) => d.name === name)?.location;
+        return `${name} / ${location}`;
+      });
+
+      setSelectedNameLocations(arr);
+      console.log("Selected name & locations:", arr);
+    },
     preserveSelectedRowKeys: true,
   };
 
@@ -226,14 +253,34 @@ const waypointMultiSelect = () => {
       setSelectedNames((data) => {
         const oldIndex = data.findIndex((item) => item === active.id);
         const newIndex = data.findIndex((item) => item === over.id);
-        return arrayMove(data, oldIndex, newIndex);
+        const newOrder = arrayMove(data, oldIndex, newIndex);
+
+        const orderedNameLocations = newOrder.map((name) => {
+          const location = dataSource.find((d) => d.name === name)?.location;
+          return `${name} / ${location}`;
+        });
+        console.log("New order (name / location):", orderedNameLocations);
+
+        return newOrder;
       });
     }
     setActiveId(null);
   };
 
   const handleRemove = (id) => {
-    setSelectedNames((prev) => prev.filter((item) => item !== id));
+    setSelectedNames((prev) => {
+      const updated = prev.filter((item) => item !== id);
+
+      const arr = updated.map((name) => {
+        const location = dataSource.find((d) => d.name === name)?.location;
+        return `${name} / ${location}`;
+      });
+
+      setSelectedNameLocations(arr);
+      console.log("After remove (name / location):", arr);
+
+      return updated;
+    });
   };
 
   const activeItem = selectedNames.find((item) => item === activeId);
@@ -263,12 +310,8 @@ const waypointMultiSelect = () => {
           value={selectedNames}
           placeholder="Select team members"
           className={styles.selectContainer}
-          style={{
-            width: "100%",
-            maxWidth: 276,
-            minHeight: 32,
-          }}
-          popupRender={(originNode) => (
+          style={{ width: "100%", maxWidth: 276, minHeight: 32 }}
+          popupRender={() => (
             <div style={{ padding: 8 }} ref={tableRef}>
               <Table
                 size="small"
@@ -282,22 +325,15 @@ const waypointMultiSelect = () => {
                 rowClassName={(record, index) =>
                   index === activeIndex ? styles.activeRow : ""
                 }
+                loading={loading}
               />
             </div>
           )}
-          styles={{
-            popup: {
-              root: {
-                zIndex: 999,
-                minWidth: 276,
-              },
-            },
-          }}
+          styles={{ popup: { root: { zIndex: 999, minWidth: 276 } } }}
           showSearch
           onSearch={setSearchText}
           onChange={(values) => setSelectedNames(values)}
           onInputKeyDown={handleInputKeyDown}
-          // dropdownStyle={{ zIndex: 999, minWidth: 300 }}
         />
       </SortableContext>
 
