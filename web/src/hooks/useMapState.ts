@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAdvancedMarkerRef, useMap } from "@vis.gl/react-google-maps";
 import { arrayMove } from "@dnd-kit/sortable";
 import { calculateDistance } from "../utils/geometry";
@@ -22,6 +22,7 @@ export const useMapState = () => {
   const [originInfowindowShown, setOriginInfowindowShown] = useState(false);
   const [destinationInfowindowShown, setDestinationInfowindowShown] =
     useState(false);
+  const isDragRef = useRef(false);
 
   const {
     directions,
@@ -88,8 +89,9 @@ export const useMapState = () => {
   }, [waypointOrder]);
 
   useEffect(() => {
-    if (origin && destination) {
+    if (origin && destination && isDragRef.current) {
       fetchDirections();
+      isDragRef.current = false; // Reset after fetching
     }
   }, [origin, destination, fetchDirections]);
 
@@ -232,6 +234,7 @@ export const useMapState = () => {
               return w;
             })
           );
+          isDragRef.current = true;
         } else {
           console.error(`Geocoder failed due to: ${status}`);
         }
@@ -251,6 +254,7 @@ export const useMapState = () => {
           return w;
         })
       );
+      isDragRef.current = true;
     }
   };
 
@@ -274,6 +278,7 @@ export const useMapState = () => {
               location: newPosition,
             },
           });
+          isDragRef.current = true;
         } else {
           console.error(`Geocoder failed due to: ${status}`);
         }
@@ -286,6 +291,7 @@ export const useMapState = () => {
           location: newPosition,
         },
       }));
+      isDragRef.current = true;
     }
   };
 
@@ -309,6 +315,7 @@ export const useMapState = () => {
               location: newPosition,
             },
           });
+          isDragRef.current = true;
         } else {
           console.error(`Geocoder failed due to: ${status}`);
         }
@@ -321,6 +328,7 @@ export const useMapState = () => {
           location: newPosition,
         },
       }));
+      isDragRef.current = true;
     }
   };
 
@@ -354,7 +362,8 @@ export const useMapState = () => {
     setDirections(null);
     setSavedRouteGeoJSON(null);
     if (directionsRenderer) {
-      directionsRenderer.setDirections({ routes: [] });
+      directionsRenderer.setMap(null); // Disconnect from map
+      directionsRenderer.setDirections(null);
     }
   };
 

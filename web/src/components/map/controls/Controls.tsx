@@ -42,9 +42,7 @@ interface ControlsProps {
     place: google.maps.places.PlaceResult | null
   ) => void;
   handleWaypointSelect: (place: google.maps.places.PlaceResult | null) => void;
-  handleWaypointsSelect: (
-    places: google.maps.places.PlaceResult[]
-  ) => void;
+  handleWaypointsSelect: (places: google.maps.places.PlaceResult[]) => void;
   reorderWaypoints: (oldIndex: number, newIndex: number) => void;
   removeWaypoint: (id: string) => void;
   fetchDirections: () => void;
@@ -129,7 +127,14 @@ const Controls = ({
   return (
     <>
       <MapControl position={ControlPosition.LEFT_TOP}>
-        <div style={{ position: "relative", width: "400px", margin: "16px" }}>
+        <div
+          style={{
+            position: "relative",
+            width: "100%",
+            maxWidth: "500px",
+            margin: "16px",
+          }}
+        >
           <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
             <StarsCanvas />
           </div>
@@ -137,10 +142,10 @@ const Controls = ({
           <Card
             size="small"
             style={{
-              width: "320px",
-              padding: "5px",
+              width: "100%",
+              padding: "16px",
               borderRadius: "16px",
-              background: "rgba(255, 255, 255, 0.74)",
+              background: "rgba(255, 255, 255, 0.75)",
               backdropFilter: "blur(10px)",
               border: "1px solid rgba(200, 200, 200, 0.2)",
               boxShadow: "0 8px 24px rgba(0, 0, 0, 0.15)",
@@ -162,17 +167,17 @@ const Controls = ({
             }
           >
             <div
-              style={{ display: "flex", flexDirection: "column", gap: "14px" }}
+              style={{ display: "flex", flexDirection: "column", gap: "16px" }}
             >
-              {/* New: Toggle for Optimize Waypoints */}
+              {/* Optimize Waypoints */}
               <div>
                 <label
                   style={{
                     fontWeight: 600,
                     fontSize: "13px",
-                    marginBottom: "4px",
-                    display: "flex",
                     color: "#444",
+                    display: "flex",
+                    marginBottom: "4px",
                   }}
                 >
                   {optimizeWaypoints
@@ -183,20 +188,21 @@ const Controls = ({
                   checked={optimizeWaypoints}
                   onChange={(checked) => {
                     setOptimizeWaypoints(checked);
-                    fetchDirections(); // Recalculate route
+                    fetchDirections();
                   }}
                   disabled={!waypoints.length}
                 />
               </div>
 
+              {/* Origin */}
               <div>
                 <label
                   style={{
                     fontWeight: 600,
                     fontSize: "13px",
+                    color: "#444",
                     marginBottom: "4px",
                     display: "flex",
-                    color: "#444",
                   }}
                 >
                   Origin
@@ -208,14 +214,15 @@ const Controls = ({
                 />
               </div>
 
+              {/* Waypoints */}
               <div>
                 <label
                   style={{
                     fontWeight: 600,
                     fontSize: "13px",
-                    marginBottom: 0,
-                    display: "flex",
                     color: "#444",
+                    marginBottom: "4px",
+                    display: "flex",
                   }}
                 >
                   Waypoints [{waypoints.length}]
@@ -225,7 +232,6 @@ const Controls = ({
                     maxHeight: "180px",
                     overflowY: "auto",
                     paddingRight: "8px",
-                    position: "relative",
                   }}
                 >
                   <DndContext
@@ -249,11 +255,7 @@ const Controls = ({
                     </SortableContext>
                     <DragOverlay adjustScale={false}>
                       {activeWaypoint && (
-                        <div
-                          style={{
-                            transform: "translate(-80%, -70%)",
-                          }}
-                        >
+                        <div style={{ transform: "translate(-50%, -50%)" }}>
                           <WaypointOverlay
                             waypoint={activeWaypoint}
                             index={activeIndex}
@@ -270,17 +272,17 @@ const Controls = ({
                 place={null}
                 placeholder="Add waypoint"
               />
-
               <WaypointMultiSelect onUsersSelect={handleWaypointsSelect} />
 
+              {/* Destination */}
               <div>
                 <label
                   style={{
                     fontWeight: 600,
                     fontSize: "13px",
+                    color: "#444",
                     marginBottom: "4px",
                     display: "flex",
-                    color: "#444",
                   }}
                 >
                   Destination
@@ -292,7 +294,30 @@ const Controls = ({
                 />
               </div>
 
+              {/* Buttons */}
               <div style={{ display: "flex", gap: "10px" }}>
+                <Tooltip
+                  title={
+                    !origin || !destination
+                      ? "Please add origin & destination"
+                      : ""
+                  }
+                >
+                  <Button
+                    icon={<Milestone size={16} />}
+                    onClick={fetchDirections}
+                    disabled={!origin || !destination}
+                    style={{
+                      flex: 1,
+                      background: "linear-gradient(90deg, #1890ff, #3875f6)",
+                      color: "#fff",
+                      fontWeight: 600,
+                      border: "none",
+                    }}
+                  >
+                    Calculate Route
+                  </Button>
+                </Tooltip>
                 <Tooltip
                   title={
                     !origin || !destination
@@ -326,12 +351,13 @@ const Controls = ({
                 </Button>
               </div>
 
+              {/* Distance & Duration */}
               {(totalDistance || totalDuration) && (
                 <div
                   style={{
                     marginTop: "12px",
                     padding: "12px",
-                    backgroundColor: "rgba(245, 247, 250, 0.9)",
+                    backgroundColor: "rgba(245,247,250,0.9)",
                     borderRadius: "12px",
                     border: "1px solid #e0e0e0",
                   }}
@@ -357,6 +383,7 @@ const Controls = ({
                 </div>
               )}
 
+              {/* Saved Route */}
               {savedRouteGeoJSON && (
                 <div style={{ marginTop: "12px" }}>
                   <div
