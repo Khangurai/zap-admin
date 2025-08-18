@@ -101,6 +101,7 @@ const WrappedMap = (props: ReturnType<typeof useMapState>) => {
     handleOriginSelect,
     handleDestinationSelect,
     handleWaypointSelect,
+    handleWaypointsSelect,
     reorderWaypoints,
     removeWaypoint,
     updateWaypointPosition,
@@ -125,6 +126,7 @@ const WrappedMap = (props: ReturnType<typeof useMapState>) => {
         handleOriginSelect={handleOriginSelect}
         handleDestinationSelect={handleDestinationSelect}
         handleWaypointSelect={handleWaypointSelect}
+        handleWaypointsSelect={handleWaypointsSelect}
         reorderWaypoints={reorderWaypoints}
         removeWaypoint={removeWaypoint}
         fetchDirections={fetchDirections}

@@ -87,6 +87,12 @@ export const useMapState = () => {
     }
   }, [waypointOrder]);
 
+  useEffect(() => {
+    if (origin && destination) {
+      fetchDirections();
+    }
+  }, [origin, destination, fetchDirections]);
+
   const [waypointInfowindows, setWaypointInfowindows] = useState<{
     [id: string]: boolean;
   }>({});
@@ -156,6 +162,25 @@ export const useMapState = () => {
         setWaypointInfowindows({ [newWaypoint.id]: true });
         setOriginInfowindowShown(false);
         setDestinationInfowindowShown(false);
+      }
+    },
+    [map]
+  );
+
+  const handleWaypointsSelect = useCallback(
+    (places: google.maps.places.PlaceResult[]) => {
+      if (places && places.length > 0) {
+        const newWaypoints = places.map((place) => ({
+          ...place,
+          id: `${Date.now()}-${place.name}-${Math.random()}`, // More robust unique ID
+        }));
+        setWaypoints(newWaypoints);
+
+        // Maybe pan to the last one added?
+        const lastPlace = places[places.length - 1];
+        if (lastPlace?.geometry?.location) {
+          map?.panTo(lastPlace.geometry.location);
+        }
       }
     },
     [map]
@@ -358,6 +383,7 @@ export const useMapState = () => {
     handleOriginSelect,
     handleDestinationSelect,
     handleWaypointSelect,
+    handleWaypointsSelect,
     reorderWaypoints,
     removeWaypoint,
     updateWaypointPosition,

@@ -115,6 +115,10 @@ export const useDirections = (
     optimizeWaypoints,
   ]);
 
+  useEffect(() => {
+    fetchDirections();
+  }, [fetchDirections]);
+
   return {
     directions,
     travelMode,

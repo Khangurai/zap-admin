@@ -34,6 +34,7 @@ import { WaypointOverlay } from "../markers/WaypointOverlay";
 import copy from "copy-to-clipboard";
 import StarsCanvas from "../../starBackground";
 import MarkersReloadButton from "../markers/MarkersReloadButton";
+import WaypointMultiSelect from "./WaypointMultiSelect";
 
 interface ControlsProps {
   handleOriginSelect: (place: google.maps.places.PlaceResult | null) => void;
@@ -41,6 +42,9 @@ interface ControlsProps {
     place: google.maps.places.PlaceResult | null
   ) => void;
   handleWaypointSelect: (place: google.maps.places.PlaceResult | null) => void;
+  handleWaypointsSelect: (
+    places: google.maps.places.PlaceResult[]
+  ) => void;
   reorderWaypoints: (oldIndex: number, newIndex: number) => void;
   removeWaypoint: (id: string) => void;
   fetchDirections: () => void;
@@ -62,6 +66,7 @@ const Controls = ({
   handleOriginSelect,
   handleDestinationSelect,
   handleWaypointSelect,
+  handleWaypointsSelect,
   reorderWaypoints,
   removeWaypoint,
   fetchDirections,
@@ -170,7 +175,9 @@ const Controls = ({
                     color: "#444",
                   }}
                 >
-                  Optimize Waypoints
+                  {optimizeWaypoints
+                    ? "Waypoints as Ordered"
+                    : "Optimize Waypoints"}
                 </label>
                 <Switch
                   checked={optimizeWaypoints}
@@ -263,6 +270,8 @@ const Controls = ({
                 place={null}
                 placeholder="Add waypoint"
               />
+
+              <WaypointMultiSelect onUsersSelect={handleWaypointsSelect} />
 
               <div>
                 <label
