@@ -16,14 +16,14 @@ import MarkersReloadButton from "./markers/MarkersReloadButton";
 
 const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
-const MapComponent = () => (
+const MapComponent = ({ setSavedRouteGeoJSON }) => (
   <APIProvider apiKey={API_KEY}>
-    <MapRoot />
+    <MapRoot setSavedRouteGeoJSON={setSavedRouteGeoJSON} />
   </APIProvider>
 );
 
-const MapRoot = () => {
-  const mapState = useMapState();
+const MapRoot = ({ setSavedRouteGeoJSON }) => {
+  const mapState = useMapState(setSavedRouteGeoJSON);
 
   return (
     <SrcMap
@@ -138,7 +138,6 @@ const WrappedMap = (props: ReturnType<typeof useMapState>) => {
         directions={directions}
         saveRoute={saveRouteAsGeoJSON}
         clearRoute={clearRoute}
-        savedRouteGeoJSON={savedRouteGeoJSON}
         onReloadMarkers={handleReloadMarkers}
         optimizeWaypoints={optimizeWaypoints} // Pass new prop
         setOptimizeWaypoints={setOptimizeWaypoints} // Pass new prop
@@ -283,7 +282,7 @@ const WrappedMap = (props: ReturnType<typeof useMapState>) => {
             >
               {destination.name}
             </div>
-            <div style={{ fontSize: "12px", color: "#666", lineHeight: "1.4" }}>
+            <div style={{ fontSize: "12px", color: "#666", lineHeight: "1.4"}}>
               {destination.formatted_address}
             </div>
           </div>

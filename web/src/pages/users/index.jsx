@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Space,
   Table,
@@ -8,8 +8,10 @@ import {
   Button,
   message,
   Input,
+  Form,
+  Modal,
 } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
+import { SearchOutlined, PlusOutlined } from "@ant-design/icons";
 import { supabase } from "../../../server/supabase/supabaseClient";
 import "./style.css";
 
@@ -19,17 +21,68 @@ const UserList = () => {
   const [loading, setLoading] = useState(true);
   const [deleteLoadingId, setDeleteLoadingId] = useState(null);
   const [searchText, setSearchText] = useState("");
+  const [editingKey, setEditingKey] = useState("");
+  const [form] = Form.useForm();
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [createForm] = Form.useForm();
 
-  // Real-time search function
+  // Real-time search function (name + username)
   const handleSearch = (value) => {
     setSearchText(value);
     if (value) {
-      const filtered = data.filter((item) =>
-        item.name.toLowerCase().includes(value.toLowerCase())
+      const lowerValue = value.toLowerCase();
+      const filtered = data.filter(
+        (item) =>
+          item.name.toLowerCase().includes(lowerValue) ||
+          item.username.toLowerCase().includes(lowerValue)
       );
       setFilteredData(filtered);
     } else {
       setFilteredData(data);
+    }
+  };
+
+  const isEditing = (record) => record.id === editingKey;
+
+  const edit = (record) => {
+    form.setFieldsValue({ name: "", username: "", ...record });
+    setEditingKey(record.id);
+  };
+
+  const cancel = () => {
+    setEditingKey("");
+  };
+
+  const save = async (id) => {
+    try {
+      const row = await form.validateFields();
+      const newData = [...data];
+      const index = newData.findIndex((item) => id === item.id);
+
+      if (index > -1) {
+        const item = newData[index];
+        const updatedUser = { ...item, ...row };
+
+        // update supabase
+        const { error } = await supabase
+          .from("users")
+          .update({
+            name: row.name,
+            username: row.username,
+          })
+          .eq("id", id);
+
+        if (error) throw error;
+
+        newData.splice(index, 1, updatedUser);
+        setData(newData);
+        setFilteredData(newData);
+        setEditingKey("");
+        message.success("User updated successfully");
+      }
+    } catch (err) {
+      console.log("Validate Failed:", err);
+      message.error("Failed to update user");
     }
   };
 
@@ -74,9 +127,56 @@ const UserList = () => {
     }
   };
 
+  const handleCreateUser = () => {
+    setIsModalVisible(true);
+  };
+
+  const handleModalOk = async () => {
+    try {
+      const values = await createForm.validateFields();
+      const { data: newUser, error } = await supabase
+        .from("users")
+        .insert([
+          {
+            name: values.name,
+            username: values.username,
+            // tags: ["member"],
+            status: true,
+          },
+        ])
+        .select();
+
+      if (error) throw error;
+
+      const added = {
+        key: newUser[0].id,
+        id: newUser[0].id,
+        serial: data.length + 1,
+        name: newUser[0].name,
+        username: newUser[0].username,
+        address: "No coordinates",
+        // tags: ["member"],
+        status: true,
+      };
+
+      const newData = [...data, added];
+      setData(newData);
+      setFilteredData(newData);
+      message.success("User created successfully");
+      setIsModalVisible(false);
+      createForm.resetFields();
+    } catch (error) {
+      message.error("Failed to create user: " + error.message);
+    }
+  };
+
+  const handleModalCancel = () => {
+    setIsModalVisible(false);
+    createForm.resetFields();
+  };
+
   const columns = [
     { title: "No.", dataIndex: "serial", key: "serial" },
-    { title: "ID", dataIndex: "id", key: "id" },
     {
       title: (
         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
@@ -106,10 +206,15 @@ const UserList = () => {
       ),
       dataIndex: "name",
       key: "name",
-      width: 200, // Fixed width for the column
-      render: (text) => <a>{text}</a>,
+      editable: true,
+      width: 200,
     },
-    { title: "Team Code", dataIndex: "team_code", key: "team_code" },
+    {
+      title: "Username",
+      dataIndex: "username",
+      key: "username",
+      editable: true,
+    },
     { title: "Address (Lat:Long)", dataIndex: "address", key: "address" },
     {
       title: "Tags",
@@ -132,40 +237,71 @@ const UserList = () => {
     {
       title: "Action",
       key: "action",
-      render: (_, record) => (
-        <Space size="middle">
-          <Switch
-            checkedChildren="လိုက်မယ်"
-            unCheckedChildren="မလိုက်ဘူး"
-            checked={record.status}
-            onChange={(checked) => handleToggleActive(record.id, checked)}
-            disabled={loading}
-          />
-          <Popconfirm
-            title={
-              <span>
-                Delete the <strong>{record.name}</strong>
-              </span>
-            }
-            description="Are you sure to delete this task?"
-            onConfirm={() => handleDelete(record.id)}
-            okText="Yes"
-            cancelText="No"
-            okButtonProps={{
-              loading: deleteLoadingId === record.id,
-              size: "small",
-              style: { marginRight: 8 },
-            }}
-            cancelButtonProps={{ size: "small" }}
-          >
-            <Button danger size="small">
-              Delete
-            </Button>
-          </Popconfirm>
-        </Space>
-      ),
+      render: (_, record) => {
+        const editable = isEditing(record);
+        return editable ? (
+          <span>
+            <a onClick={() => save(record.id)} style={{ marginRight: 8 }}>
+              Save
+            </a>
+            <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
+              <a>Cancel</a>
+            </Popconfirm>
+          </span>
+        ) : (
+          <Space size="middle">
+            <a disabled={editingKey !== ""} onClick={() => edit(record)}>
+              Edit
+            </a>
+            <Switch
+              checkedChildren="လိုက်မယ်"
+              unCheckedChildren="မလိုက်ဘူး"
+              checked={record.status}
+              onChange={(checked) => handleToggleActive(record.id, checked)}
+              disabled={loading}
+            />
+            <Popconfirm
+              title={
+                <span>
+                  Delete the <strong>{record.name}</strong>
+                </span>
+              }
+              description="Are you sure to delete this task?"
+              onConfirm={() => handleDelete(record.id)}
+              okText="Yes"
+              cancelText="No"
+              okButtonProps={{
+                loading: deleteLoadingId === record.id,
+                size: "small",
+                style: { marginRight: 8 },
+              }}
+              cancelButtonProps={{ size: "small" }}
+            >
+              <Button danger size="small">
+                Delete
+              </Button>
+            </Popconfirm>
+          </Space>
+        );
+      },
     },
   ];
+
+  const mergedColumns = columns.map((col) => {
+    if (!col.editable) {
+      return col;
+    }
+    return {
+      ...col,
+      onCell: (record) => ({
+        record,
+        inputType: "text",
+        dataIndex: col.dataIndex,
+        title: col.title,
+        editing: isEditing(record),
+      }),
+    };
+  });
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -174,14 +310,14 @@ const UserList = () => {
         .from("users")
         .select(
           `
-        id,
-        name,
-        team_code,
-        location,
-        longitude,
-        latitude,
-        status
-      `
+          id,
+          name,
+          username,
+          longitude,
+          latitude,
+          status,
+          created_at
+        `
         )
         .order("created_at", { ascending: true });
 
@@ -193,13 +329,8 @@ const UserList = () => {
           let coords = "";
           if (user.latitude && user.longitude) {
             coords = `📍${user.latitude}, ${user.longitude}`;
-          } else if (user.location) {
-            try {
-              coords = "Coordinates available (needs parsing)";
-            } catch (error) {
-              console.error("Error parsing location:", error);
-              coords = "";
-            }
+          } else {
+            coords = "No coordinates";
           }
 
           return {
@@ -207,10 +338,10 @@ const UserList = () => {
             id: user.id,
             serial: index + 1,
             name: user.name,
-            team_code: user.team_code,
+            username: user.username,
             address: coords,
-            tags: user.tags || ["member"],
-            status: user.status ?? false,
+            tags: ["member"], // default
+            status: user.status ?? true,
           };
         });
 
@@ -223,9 +354,96 @@ const UserList = () => {
     fetchUsers();
   }, []);
 
+  const EditableCell = ({
+    editing,
+    dataIndex,
+    title,
+    inputType,
+    record,
+    index,
+    children,
+    ...restProps
+  }) => {
+    return (
+      <td {...restProps}>
+        {editing ? (
+          <Form.Item
+            name={dataIndex}
+            style={{ margin: 0 }}
+            rules={[
+              {
+                required: true,
+                message: `Please Input ${title}!`,
+              },
+            ]}
+          >
+            <Input />
+          </Form.Item>
+        ) : (
+          children
+        )}
+      </td>
+    );
+  };
+
   return (
     <div>
-      <Table columns={columns} dataSource={filteredData} loading={loading} />
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-start",
+          marginBottom: 16,
+        }}
+      >
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={handleCreateUser}
+        >
+          Create User
+        </Button>
+      </div>
+
+      <Form form={form} component={false}>
+        <Table
+          components={{
+            body: {
+              cell: EditableCell,
+            },
+          }}
+          bordered
+          columns={mergedColumns}
+          dataSource={filteredData}
+          loading={loading}
+          rowClassName="editable-row"
+          pagination={false}
+        />
+      </Form>
+
+      {/* Modal for creating new user */}
+      <Modal
+        title="Create User"
+        open={isModalVisible}
+        onOk={handleModalOk}
+        onCancel={handleModalCancel}
+      >
+        <Form form={createForm} layout="vertical">
+          <Form.Item
+            name="name"
+            label="Name"
+            rules={[{ required: true, message: "Please input name!" }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="username"
+            label="Username"
+            rules={[{ required: true, message: "Please input username!" }]}
+          >
+            <Input />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };

@@ -1,38 +1,43 @@
-import React from "react";
+import React, { useState } from "react";
 import { Row, Col } from "antd";
 import { APIProvider } from "@vis.gl/react-google-maps";
 import MapComponent from "../../components/map/MapComponent";
-import "./index.css";
+// import "./index.css";
 import RouteCards from "../../components/map/routeCards/routeCards";
+import CreateRouteForm from "../../components/map/controls/CreateRouteForm";
 
 const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
-const Index = () => (
-  <APIProvider apiKey={apiKey}>
-    <Row gutter={16}>
+const Index = () => {
+  const [savedRouteGeoJSON, setSavedRouteGeoJSON] = useState(null);
+
+  return (
+    <APIProvider apiKey={apiKey}>
       <Col span={24}>
-        <MapComponent />
+        <MapComponent setSavedRouteGeoJSON={setSavedRouteGeoJSON} />
       </Col>
-    </Row>
-    <Row>
-      <Col span={24}>
-        <div
-          style={{
-            padding: "20px",
-            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-            marginTop: "20px",
-          }}
-        >
-          <RouteCards />
-          {/* <h3 style={{ textAlign: "center" }}>Map and Control Panel</h3>
+
+      <Row>
+        <Col span={24}>
+          <div
+          // style={{
+          //   padding: "20px",
+          //   boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+          //   marginTop: "20px",
+          // }}
+          >
+            {/* <CreateRouteForm /> */}
+            <RouteCards savedRouteGeoJSON={savedRouteGeoJSON} />
+            {/* <h3 style={{ textAlign: "center" }}>Map and Control Panel</h3>
           <p style={{ textAlign: "center" }}>
             Use the control panel to set origin and destination for route
             calculations.
           </p> */}
-        </div>
-      </Col>
-    </Row>
-  </APIProvider>
-);
+          </div>
+        </Col>
+      </Row>
+    </APIProvider>
+  );
+};
 
 export default Index;

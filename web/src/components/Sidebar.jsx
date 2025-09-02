@@ -1,7 +1,15 @@
 import { Layout, Menu } from "antd";
 import { useLocation, useNavigate } from "react-router-dom";
 const { Sider } = Layout;
-import { Map, UserCog, IdCard, Route, Rocket, Car } from "lucide-react";
+import {
+  Map,
+  UserCog,
+  IdCard,
+  Route,
+  Rocket,
+  Car,
+  TestTube,
+} from "lucide-react";
 import CarsMgmt from "../pages/cars/index.jsx";
 
 const siderStyle = {
@@ -68,11 +76,6 @@ const Sidebar = ({ collapsed }) => {
             label: "Create Route",
           },
           {
-            key: "/drivers",
-            icon: <IdCard />,
-            label: "Drivers",
-          },
-          {
             key: "/users",
             icon: <UserCog />,
             label: "Users",
@@ -81,6 +84,11 @@ const Sidebar = ({ collapsed }) => {
             key: "/cars",
             icon: <Car />,
             label: "Cars Management",
+          },
+          {
+            key: "/testUI",
+            icon: <TestTube />,
+            label: "testUI",
           },
         ]}
       />

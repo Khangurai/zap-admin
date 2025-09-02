@@ -1,6 +1,6 @@
-id,car_number,driver,capacity,routes,image_url,avatar_url
-6,YGN-7A/1234,U Aung Aung,16,Route 1,https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png,https://api.dicebear.com/7.x/miniavs/svg?seed=1
-7,YGN-7B/5678,U Hla Hla,16,Route 2,https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png,https://api.dicebear.com/7.x/miniavs/svg?seed=2
-8,YGN-7C/4321,Ko Ko Lwin,16,Route 3,https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png,https://api.dicebear.com/7.x/miniavs/svg?seed=4
-9,YGN-7D/8765,U Thin Thin,16,Route 4,https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png,https://api.dicebear.com/7.x/miniavs/svg?seed=4
-10,YGN-7E/9999,Maung Maung,16,Route 5,https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png,https://api.dicebear.com/7.x/miniavs/svg?seed=5
+car_number,driver_name,car_capacity,routes,image_url,avatar_url,team_code
+YGN-7A/1234,U Aung Aung,16,"{""type"":""LineString"",""coordinates"":[[102.0,0.0],[103.0,1.0],[104.0,0.0],[105.0,1.0]]}",https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png,https://api.dicebear.com/7.x/miniavs/svg?seed=1,TEAM627
+YGN-7B/5678,U Hla Hla,16,"{""type"":""LineString"",""coordinates"":[[96.13744,16.780137],[96.143969,16.779877],[96.14788,16.786012]]}",https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png,https://api.dicebear.com/7.x/miniavs/svg?seed=2,TEAM289
+YGN-7C/4321,Ko Ko Lwin,16,"{""type"":""LineString"",""coordinates"":[[96.161588,16.78585],[96.16733,16.778781],[96.168959,16.776539]]}",https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png,https://api.dicebear.com/7.x/miniavs/svg?seed=4,TEAM698
+YGN-7D/8765,U Thin Thin,16,"{""type"":""LineString"",""coordinates"":[[96.171004,16.776474],[96.175772,16.77122],[96.122994,16.793038]]}",https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png,https://api.dicebear.com/7.x/miniavs/svg?seed=4,TEAM851
+YGN-7E/9999,Maung Maung,16,"{""type"":""LineString"",""coordinates"":[[96.122292,16.802123],[96.12437,16.803815],[96.133336,16.803723]]}",https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png,https://api.dicebear.com/7.x/miniavs/svg?seed=5,TEAM194

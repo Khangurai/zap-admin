@@ -17,7 +17,7 @@ export const useDirections = (
     useState<google.maps.DirectionsService | null>(null);
   const [directionsRenderer, setDirectionsRenderer] =
     useState<google.maps.DirectionsRenderer | null>(null);
-  const [optimizeWaypoints, setOptimizeWaypoints] = useState(true); // New state for toggling optimization
+  const [optimizeWaypoints, setOptimizeWaypoints] = useState(false); // New state for toggling optimization
   const [waypointOrder, setWaypointOrder] = useState<number[]>([]); // Store optimized order
 
   const computeRouteDetails = (result: google.maps.DirectionsResult) => {

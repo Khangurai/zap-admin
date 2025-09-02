@@ -6,7 +6,9 @@ import { useDirections } from "./useDirections";
 
 const DRAG_RADIUS_THRESHOLD = 52.75; // in meters
 
-export const useMapState = () => {
+export const useMapState = (
+  setSavedRouteGeoJSON: (value: any | null) => void
+) => {
   const [origin, setOrigin] = useState<google.maps.places.PlaceResult | null>(
     null
   );
@@ -38,9 +40,7 @@ export const useMapState = () => {
     waypointOrder, // New: Get optimized order
   } = useDirections(origin, destination, waypoints);
 
-  const [savedRouteGeoJSON, setSavedRouteGeoJSON] = useState<string | null>(
-    null
-  );
+  
 
   const map = useMap();
   const [geocoder, setGeocoder] = useState<google.maps.Geocoder | null>(null);
@@ -352,7 +352,7 @@ export const useMapState = () => {
       ],
     };
 
-    setSavedRouteGeoJSON(JSON.stringify(geoJson, null, 2));
+    setSavedRouteGeoJSON(geoJson);
   };
 
   const clearRoute = () => {
@@ -381,7 +381,6 @@ export const useMapState = () => {
     travelMode,
     totalDistance,
     totalDuration,
-    savedRouteGeoJSON,
     waypointInfowindows,
     handleWaypointMarkerClick,
     handleWaypointInfoWindowClose,

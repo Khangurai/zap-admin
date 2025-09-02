@@ -54,7 +54,6 @@ interface ControlsProps {
   totalDistance: string | null;
   totalDuration: string | null;
   directions: google.maps.DirectionsResult | null;
-  savedRouteGeoJSON: string | null;
   onReloadMarkers: () => void;
   optimizeWaypoints: boolean; // New prop
   setOptimizeWaypoints: (value: boolean) => void; // New prop
@@ -76,14 +75,13 @@ const Controls = ({
   totalDistance,
   totalDuration,
   directions,
-  savedRouteGeoJSON,
   onReloadMarkers,
   optimizeWaypoints,
   setOptimizeWaypoints,
 }: ControlsProps) => {
   const map = useMap();
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [isCopied, setIsCopied] = useState(false);
+  
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -112,17 +110,7 @@ const Controls = ({
     ? waypoints.findIndex((w) => w.id === activeId)
     : -1;
 
-  const copyToClipboard = () => {
-    if (!savedRouteGeoJSON) return;
-
-    const success = copy(savedRouteGeoJSON);
-    if (success) {
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000);
-    } else {
-      console.error("Copy failed");
-    }
-  };
+  
 
   return (
     <>
@@ -181,8 +169,8 @@ const Controls = ({
                   }}
                 >
                   {optimizeWaypoints
-                    ? "Waypoints as Ordered"
-                    : "Optimize Waypoints"}
+                    ? "Optimize Waypoints"
+                    : "Waypoints as Ordered"}
                 </label>
                 <Switch
                   checked={optimizeWaypoints}
@@ -383,45 +371,7 @@ const Controls = ({
                 </div>
               )}
 
-              {/* Saved Route */}
-              {savedRouteGeoJSON && (
-                <div style={{ marginTop: "12px" }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      marginBottom: "8px",
-                    }}
-                  >
-                    <h3 style={{ margin: 0, fontSize: "14px" }}>
-                      Saved Route (GeoJSON)
-                    </h3>
-                    <Tooltip title={isCopied ? "Copied!" : "Copy"}>
-                      <Button
-                        icon={
-                          isCopied ? <Check size={16} /> : <Copy size={16} />
-                        }
-                        onClick={copyToClipboard}
-                      />
-                    </Tooltip>
-                  </div>
-                  <pre
-                    style={{
-                      padding: "10px",
-                      background: "#f8f9fa",
-                      border: "1px solid #e8e8e8",
-                      borderRadius: "8px",
-                      fontSize: "12px",
-                      whiteSpace: "pre-wrap",
-                      maxHeight: "180px",
-                      overflowY: "auto",
-                    }}
-                  >
-                    {savedRouteGeoJSON}
-                  </pre>
-                </div>
-              )}
+              
             </div>
           </Card>
         </div>

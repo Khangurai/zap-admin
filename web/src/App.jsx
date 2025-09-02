@@ -3,7 +3,7 @@ import AppLayout from "./components/AppLayout";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import MissionControl from "./pages/mission-control/index";
 import UserList from "./pages/users";
-import Drivers from "./pages/drivers/index";
+import testUI from "./pages/TestUI";
 import CarsMgmt from "./pages/cars";
 import Login from "./auth/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -30,10 +30,10 @@ const App = () => {
             <Route index element={<MissionControl />} />
             <Route path="/map-tracking" element={<RouterGenerator />} />
             <Route path="/routes" element={<Index />} />
-            <Route path="/drivers" element={<Drivers />} />
             <Route path="/users" element={<UserList />} />
             <Route path="/cars" element={<CarsMgmt />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/testUI" element={<testUI />} />
           </Route>
         </Routes>
       </AuthProvider>
