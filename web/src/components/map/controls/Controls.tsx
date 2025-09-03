@@ -81,7 +81,6 @@ const Controls = ({
 }: ControlsProps) => {
   const map = useMap();
   const [activeId, setActiveId] = useState<string | null>(null);
-  
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -109,8 +108,6 @@ const Controls = ({
   const activeIndex = activeWaypoint
     ? waypoints.findIndex((w) => w.id === activeId)
     : -1;
-
-  
 
   return (
     <>
@@ -157,7 +154,7 @@ const Controls = ({
             <div
               style={{ display: "flex", flexDirection: "column", gap: "16px" }}
             >
-              {/* Optimize Waypoints */}
+              {/* Optimize Waypoints
               <div>
                 <label
                   style={{
@@ -180,7 +177,7 @@ const Controls = ({
                   }}
                   disabled={!waypoints.length}
                 />
-              </div>
+              </div> */}
 
               {/* Origin */}
               <div>
@@ -202,7 +199,8 @@ const Controls = ({
                 />
               </div>
 
-              {/* Waypoints */}
+              {/* old version */}
+              {/* Waypoints
               <div>
                 <label
                   style={{
@@ -213,7 +211,7 @@ const Controls = ({
                     display: "flex",
                   }}
                 >
-                  Waypoints [{waypoints.length}]
+                  Waypoints [{waypoints.length}] 
                 </label>
                 <div
                   style={{
@@ -241,6 +239,98 @@ const Controls = ({
                         />
                       ))}
                     </SortableContext>
+                    <DragOverlay adjustScale={false}>
+                      {activeWaypoint && (
+                        <div style={{ transform: "translate(-50%, -50%)" }}>
+                          <WaypointOverlay
+                            waypoint={activeWaypoint}
+                            index={activeIndex}
+                          />
+                        </div>
+                      )}
+                    </DragOverlay>
+                  </DndContext>
+                </div>
+              </div> */}
+
+              {/* New version */}
+              {/* Waypoints */}
+              <div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: "4px",
+                  }}
+                >
+                  <label
+                    style={{
+                      fontWeight: 600,
+                      fontSize: "13px",
+                      color: "#444",
+                      display: "flex",
+                    }}
+                  >
+                    Waypoints [{waypoints.length}]
+                  </label>
+
+                  {/* Optimize Waypoints Toggle */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    <label
+                      style={{
+                        fontWeight: 600,
+                        fontSize: "13px",
+                        color: "#444",
+                      }}
+                    >
+                      {optimizeWaypoints
+                        ? "Optimize Waypoints"
+                        : "Waypoints as Ordered"}
+                    </label>
+                    <Switch
+                      checked={optimizeWaypoints}
+                      onChange={(checked) => {
+                        setOptimizeWaypoints(checked);
+                      }}
+                      disabled={!waypoints.length}
+                    />
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    maxHeight: "180px",
+                    overflowY: "auto",
+                    paddingRight: "8px",
+                  }}
+                >
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext
+                      items={waypoints.map((w) => w.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      {waypoints.map((waypoint, index) => (
+                        <DraggableWaypoint
+                          key={waypoint.id}
+                          waypoint={waypoint}
+                          index={index}
+                          onDelete={removeWaypoint}
+                        />
+                      ))}
+                    </SortableContext>
+
                     <DragOverlay adjustScale={false}>
                       {activeWaypoint && (
                         <div style={{ transform: "translate(-50%, -50%)" }}>
@@ -370,8 +460,6 @@ const Controls = ({
                   </Row>
                 </div>
               )}
-
-              
             </div>
           </Card>
         </div>

@@ -82,6 +82,12 @@ export const useDirections = (
     };
   }, [directionsRenderer]);
 
+  useEffect(() => {
+    if (origin && destination) {
+      fetchDirections();
+    }
+  }, [optimizeWaypoints]);
+
   const fetchDirections = useCallback(() => {
     if (!origin || !destination || !directionsService || !directionsRenderer)
       return;
