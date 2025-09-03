@@ -150,9 +150,22 @@ const DraggableTag = ({ tag, onRemove }) => {
   );
 };
 
+// ✅ Added Status column
 const columns = [
   { title: <User />, dataIndex: "name", key: "name", width: 100 },
   { title: <MapPin />, dataIndex: "location", key: "location" },
+  {
+    title: "Status",
+    dataIndex: "status",
+    key: "status",
+    width: 100,
+    render: (status) =>
+      status ? (
+        <Tag color="green">Active</Tag>
+      ) : (
+        <Tag color="red">Inactive</Tag>
+      ),
+  },
 ];
 
 const WaypointMultiSelect = ({ onUsersSelect }) => {
@@ -183,6 +196,7 @@ const WaypointMultiSelect = ({ onUsersSelect }) => {
           name: u.name,
           latitude: u.latitude,
           longitude: u.longitude,
+          status: u.status, // 👈 keep status as boolean
           location: `${u.latitude.toFixed(4)}, ${u.longitude.toFixed(4)}`,
         }));
         setDataSource(formatted);
@@ -212,10 +226,14 @@ const WaypointMultiSelect = ({ onUsersSelect }) => {
     item.name.toLowerCase().includes(searchText.toLowerCase())
   );
 
+  // ✅ Disable row selection if status = false
   const rowSelection = {
     selectedRowKeys: selectedNames,
     onChange: handleSelectionChange,
     preserveSelectedRowKeys: true,
+    getCheckboxProps: (record) => ({
+      disabled: record.status === false,
+    }),
   };
 
   const handleInputKeyDown = (e) => {
@@ -309,9 +327,10 @@ const WaypointMultiSelect = ({ onUsersSelect }) => {
                 pagination={{ pageSize: 10 }}
                 scroll={{ y: 55 * 5 }}
                 className={styles.customTable}
-                rowClassName={(record, index) =>
-                  index === activeIndex ? styles.activeRow : ""
-                }
+                rowClassName={(record, index) => {
+                  if (record.status === false) return "row-inactive"; // 👈 grey out inactive
+                  return index === activeIndex ? styles.activeRow : "";
+                }}
                 loading={loading}
               />
             </div>

@@ -9,8 +9,10 @@ import {
   Image,
   Upload,
   message,
+  Modal,
 } from "antd";
 import ImgCrop from "antd-img-crop";
+import { SearchOutlined, PlusOutlined } from "@ant-design/icons";
 import { supabase } from "../../../server/supabase/supabaseClient";
 
 const EditableContext = React.createContext(null);
@@ -26,7 +28,6 @@ const EditableRow = ({ index, ...props }) => {
   );
 };
 
-// Base64 conversion utility
 const getBase64 = (file) =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -35,7 +36,6 @@ const getBase64 = (file) =>
     reader.onerror = (error) => reject(error);
   });
 
-// Image upload cell component for handling image previews and uploads
 const ImageUploadCell = ({
   record,
   dataIndex,
@@ -47,7 +47,6 @@ const ImageUploadCell = ({
   const [previewImage, setPreviewImage] = useState("");
   const [fileList, setFileList] = useState([]);
 
-  // Initialize fileList with existing image
   useEffect(() => {
     if (record[dataIndex]) {
       setFileList([
@@ -75,23 +74,17 @@ const ImageUploadCell = ({
     const { file, onSuccess, onError } = options;
 
     try {
-      // Validate file type & size
       if (!file.type.startsWith("image/")) {
         message.error("Only image files are allowed!");
-        onError && onError(new Error("Invalid file type"));
-        return;
+        return onError(new Error("Invalid file type"));
       }
       if (file.size / 1024 / 1024 > 2) {
         message.error("Image must be smaller than 2MB!");
-        onError && onError(new Error("File too large"));
-        return;
+        return onError(new Error("File too large"));
       }
 
-      // CORRECTED: Use proper bucket and folder names based on isAvatar flag
       const fileExt = file.name.split(".").pop();
-      const fileName = `${record.id}-${Date.now()}.${fileExt}`;
-      
-      // Determine bucket and folder based on isAvatar
+      const fileName = `${record.id || "new"}-${Date.now()}.${fileExt}`;
       const bucketName = isAvatar ? "avatars" : "cars";
       const folder = isAvatar ? "driver-pics" : "cars-pics";
       const filePath = `${folder}/${fileName}`;
@@ -102,22 +95,18 @@ const ImageUploadCell = ({
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
-      const { data } = supabase.storage
-        .from(bucketName)
-        .getPublicUrl(filePath);
+      const { data } = supabase.storage.from(bucketName).getPublicUrl(filePath);
       const publicUrl = data.publicUrl;
 
-      // Update the record
       const updatedRecord = { ...record, [dataIndex]: publicUrl };
       handleSave(updatedRecord);
 
       message.success(`${isAvatar ? "Avatar" : "Image"} updated successfully!`);
-      onSuccess && onSuccess("ok");
+      onSuccess("ok");
     } catch (error) {
       console.error(error);
       message.error(`Upload failed: ${error.message}`);
-      onError && onError(error);
+      onError(error);
     }
   };
 
@@ -128,23 +117,17 @@ const ImageUploadCell = ({
   const handleRemove = async () => {
     try {
       if (!record[dataIndex]) return;
-
-      // Extract file path from URL
       const url = new URL(record[dataIndex]);
       const pathSegments = url.pathname.split("/");
-      // Remove the first segment which is the bucket name
       const filePath = pathSegments.slice(2).join("/");
-
-      // CORRECTED: Use proper bucket based on isAvatar
       const bucketName = isAvatar ? "avatars" : "cars";
-      
+
       const { error: removeError } = await supabase.storage
         .from(bucketName)
         .remove([filePath]);
 
       if (removeError) throw removeError;
 
-      // Update the record
       const updatedRecord = { ...record, [dataIndex]: null };
       handleSave(updatedRecord);
 
@@ -157,10 +140,9 @@ const ImageUploadCell = ({
 
   return (
     <>
-      {/* Added ImgCrop wrapper with appropriate props */}
-      <ImgCrop 
-        rotationSlider 
-        aspect={isAvatar ? 1 : undefined} // Set 1:1 aspect ratio for avatars only
+      <ImgCrop
+        rotationSlider
+        aspect={isAvatar ? 1 : undefined}
         showGrid={isAvatar}
       >
         <Upload
@@ -170,10 +152,7 @@ const ImageUploadCell = ({
           onPreview={handlePreview}
           onChange={onChange}
           onRemove={handleRemove}
-          showUploadList={{
-            showPreviewIcon: true,
-            showRemoveIcon: true,
-          }}
+          showUploadList={{ showPreviewIcon: true, showRemoveIcon: true }}
           maxCount={1}
         >
           {fileList.length < 1 && "+ Upload"}
@@ -260,20 +239,25 @@ const EditableCell = ({
 
 const CarsMgmt = () => {
   const [cars, setCars] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [form] = Form.useForm();
 
   useEffect(() => {
     fetchCars();
   }, []);
 
   const fetchCars = async () => {
-    const { data, error } = await supabase.from("cars").select("*");
+    const { data, error } = await supabase.from("fleet_mag").select("*");
     if (error) console.error(error);
     else setCars(data.map((c) => ({ key: c.id, ...c })));
   };
 
   const handleDelete = async (key) => {
     const car = cars.find((c) => c.key === key);
-    const { error } = await supabase.from("cars").delete().eq("id", car.id);
+    const { error } = await supabase
+      .from("fleet_mag")
+      .delete()
+      .eq("id", car.id);
     if (!error) {
       setCars(cars.filter((item) => item.key !== key));
     }
@@ -286,55 +270,77 @@ const CarsMgmt = () => {
     setCars(newData);
 
     const { error } = await supabase
-      .from("cars")
+      .from("fleet_mag")
       .update({
         car_number: row.car_number,
         driver: row.driver,
         capacity: row.capacity,
-        routes: row.routes,
+        route_id: row.route_id,
         image_url: row.image_url,
         avatar_url: row.avatar_url,
+        d_username: row.d_username, // updated
       })
       .eq("id", row.id);
 
     if (error) console.error(error);
   };
 
+  const handleCreate = async () => {
+    try {
+      const values = await form.validateFields();
+      const { data, error } = await supabase
+        .from("fleet_mag")
+        .insert([values])
+        .select();
+
+      if (error) throw error;
+
+      setCars([...cars, { key: data[0].id, ...data[0] }]);
+      setIsModalOpen(false);
+      form.resetFields();
+      message.success("New car added!");
+    } catch (err) {
+      console.error(err);
+      message.error(`Create failed: ${err.message}`);
+    }
+  };
+
   const columns = [
     { title: "Car Number", dataIndex: "car_number", editable: true },
     { title: "Driver", dataIndex: "driver", editable: true },
+    { title: "Username", dataIndex: "d_username", editable: true }, // new column
     {
       title: "Capacity",
       dataIndex: "capacity",
       editable: true,
       inputType: "number",
     },
-    { title: "Routes", dataIndex: "routes", editable: true },
-    {
-      title: "Image",
-      dataIndex: "image_url",
-      render: (text, record) => (
-        <ImageUploadCell
-          record={record}
-          dataIndex="image_url"
-          title="Car Image"
-          handleSave={handleSave}
-        />
-      ),
-    },
-    {
-      title: "Avatar",
-      dataIndex: "avatar_url",
-      render: (text, record) => (
-        <ImageUploadCell
-          record={record}
-          dataIndex="avatar_url"
-          title="Avatar"
-          isAvatar={true}
-          handleSave={handleSave}
-        />
-      ),
-    },
+    { title: "route_id", dataIndex: "route_id", editable: true },
+    // {
+    //   title: "Image",
+    //   dataIndex: "image_url",
+    //   render: (text, record) => (
+    //     <ImageUploadCell
+    //       record={record}
+    //       dataIndex="image_url"
+    //       title="Car Image"
+    //       handleSave={handleSave}
+    //     />
+    //   ),
+    // },
+    // {
+    //   title: "Avatar",
+    //   dataIndex: "avatar_url",
+    //   render: (text, record) => (
+    //     <ImageUploadCell
+    //       record={record}
+    //       dataIndex="avatar_url"
+    //       title="Avatar"
+    //       isAvatar={true}
+    //       handleSave={handleSave}
+    //     />
+    //   ),
+    // },
     {
       title: "Operation",
       dataIndex: "operation",
@@ -371,13 +377,74 @@ const CarsMgmt = () => {
   };
 
   return (
-    <Table
-      components={components}
-      rowClassName={() => "editable-row"}
-      bordered
-      dataSource={cars}
-      columns={columns}
-    />
+    <>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-start",
+          marginBottom: 16,
+        }}
+      >
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={() => setIsModalOpen(true)}
+        >
+          Create Car
+        </Button>
+      </div>
+
+      <Table
+        components={components}
+        rowClassName={() => "editable-row"}
+        bordered
+        dataSource={cars}
+        columns={columns}
+      />
+
+      <Modal
+        title="Add New Car"
+        visible={isModalOpen}
+        onCancel={() => setIsModalOpen(false)}
+        onOk={handleCreate}
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item
+            name="car_number"
+            label="Car Number"
+            rules={[{ required: true }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item name="driver" label="Driver" rules={[{ required: true }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="d_username"
+            label="d_username"
+            rules={[{ required: true }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="capacity"
+            label="Capacity"
+            rules={[{ required: true }]}
+          >
+            <InputNumber style={{ width: "100%" }} />
+          </Form.Item>
+          <Form.Item name="route_id" label="route_id" rules={[{ required: true }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="image_url" label="Image URL">
+            <Input />
+          </Form.Item>
+          <Form.Item name="avatar_url" label="Avatar URL">
+            <Input />
+          </Form.Item>
+        </Form>
+      </Modal>
+    </>
   );
 };
 
