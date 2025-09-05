@@ -127,9 +127,9 @@ const Controls = ({
           <Card
             size="small"
             style={{
-              width: "80%", 
-              maxWidth: "600px", 
-              marginLeft: "0", 
+              width: "75%",
+              maxWidth: "600px",
+              marginLeft: "0",
               padding: "16px",
               borderRadius: "16px",
               background: "rgba(255, 255, 255, 0.75)",
@@ -348,11 +348,11 @@ const Controls = ({
                 </div>
               </div>
 
-              <PlaceAutocomplete
+              {/* <PlaceAutocomplete
                 onPlaceSelect={handleWaypointSelect}
                 place={null}
                 placeholder="Add waypoint"
-              />
+              /> */}
               <WaypointMultiSelect onUsersSelect={handleWaypointsSelect} />
 
               {/* Destination */}
@@ -376,57 +376,43 @@ const Controls = ({
               </div>
 
               {/* Buttons */}
-              <div style={{ display: "flex", gap: "10px" }}>
-                <Tooltip
-                  title={
-                    !origin || !destination
-                      ? "Please add origin & destination"
-                      : ""
-                  }
+              <div style={{ display: "flex", gap: "8px" }}>
+                <Button
+                  icon={<Milestone size={16} />}
+                  onClick={fetchDirections}
+                  disabled={!origin || !destination}
+                  style={{
+                    flex: 1,
+                    minWidth: "100px",
+                    background: "linear-gradient(90deg, #1890ff, #3875f6)",
+                    color: "#fff",
+                    fontWeight: 600,
+                    border: "none",
+                  }}
                 >
-                  <Button
-                    icon={<Milestone size={16} />}
-                    onClick={fetchDirections}
-                    disabled={!origin || !destination}
-                    style={{
-                      flex: 1,
-                      background: "linear-gradient(90deg, #1890ff, #3875f6)",
-                      color: "#fff",
-                      fontWeight: 600,
-                      border: "none",
-                    }}
-                  >
-                    Calculate Route
-                  </Button>
-                </Tooltip>
-                <Tooltip
-                  title={
-                    !origin || !destination
-                      ? "Please add origin & destination"
-                      : ""
-                  }
+                  Calculate
+                </Button>
+                <Button
+                  icon={<Save size={16} />}
+                  onClick={saveRoute}
+                  disabled={!directions}
+                  style={{
+                    flex: 1,
+                    minWidth: "100px",
+                    background: "linear-gradient(90deg, #64ffda, #00c6ff)",
+                    color: "#000",
+                    fontWeight: 600,
+                    border: "none",
+                  }}
                 >
-                  <Button
-                    icon={<Save size={16} />}
-                    onClick={saveRoute}
-                    disabled={!directions}
-                    style={{
-                      flex: 1,
-                      background: "linear-gradient(90deg, #64ffda, #00c6ff)",
-                      color: "#000",
-                      fontWeight: 600,
-                      border: "none",
-                    }}
-                  >
-                    Save Route
-                  </Button>
-                </Tooltip>
+                  Save Route
+                </Button>
                 <Button
                   danger
                   icon={<XCircle size={16} />}
                   onClick={clearRoute}
                   disabled={!directions}
-                  style={{ flex: 1 }}
+                  style={{ flex: 1, minWidth: "100px" }}
                 >
                   Clear Route
                 </Button>

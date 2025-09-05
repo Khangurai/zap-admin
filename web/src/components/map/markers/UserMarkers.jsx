@@ -7,7 +7,7 @@ import {
   useMap,
 } from "@vis.gl/react-google-maps";
 import { Zap } from "lucide-react";
-import { MarkerClusterer } from "@googlemaps/markerclusterer";
+// import { MarkerClusterer } from "@googlemaps/markerclusterer";
 
 const UserMarker = ({ user, index, onMarkerCreated, onMarkerUnmounted }) => {
   const [infowindowShown, setInfowindowShown] = useState(false);
@@ -25,11 +25,11 @@ const UserMarker = ({ user, index, onMarkerCreated, onMarkerUnmounted }) => {
 
   useEffect(() => {
     if (marker) {
-      onMarkerCreated(marker);
+      // onMarkerCreated(marker);
     }
     return () => {
       if (marker) {
-        onMarkerUnmounted(marker);
+        // onMarkerUnmounted(marker);
       }
     };
   }, [marker, onMarkerCreated, onMarkerUnmounted]);
@@ -151,29 +151,29 @@ const UserMarkers = ({ reloadKey }) => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const map = useMap();
-  const clusterer = useRef(null);
-  const [clusterVisible, setClusterVisible] = useState(false);
+  // const clusterer = useRef(null);
+  // const [clusterVisible, setClusterVisible] = useState(false);
 
-  useEffect(() => {
-    if (!map) return;
+  // useEffect(() => {
+  //   if (!map) return;
 
-    // clear old markers and clusterer
-    clusterer.current?.clearMarkers();
-    clusterer.current = null;
-    setClusterVisible(false);
+  //   // clear old markers and clusterer
+  //   clusterer.current?.clearMarkers();
+  //   clusterer.current = null;
+  //   setClusterVisible(false);
 
-    const totalAnimationTime = users.length * 100 + 500;
+  //   const totalAnimationTime = users.length * 100 + 500;
 
-    const clusterTimeout = setTimeout(() => {
-      clusterer.current = new MarkerClusterer({ map });
-      setClusterVisible(true);
-    }, totalAnimationTime);
+  //   const clusterTimeout = setTimeout(() => {
+  //     clusterer.current = new MarkerClusterer({ map });
+  //     setClusterVisible(true);
+  //   }, totalAnimationTime);
 
-    return () => {
-      clearTimeout(clusterTimeout);
-      clusterer.current?.clearMarkers();
-    };
-  }, [map, users.length, reloadKey]); // reloadKey ကို dependency ထဲထည့်ပါ
+  //   return () => {
+  //     clearTimeout(clusterTimeout);
+  //     clusterer.current?.clearMarkers();
+  //   };
+  // }, [map, users.length, reloadKey]); // reloadKey ကို dependency ထဲထည့်ပါ
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -195,17 +195,17 @@ const UserMarkers = ({ reloadKey }) => {
     fetchUsers();
   }, [reloadKey]);
 
-  const handleMarkerCreated = (marker) => {
-    if (clusterer.current && clusterVisible) {
-      clusterer.current.addMarker(marker);
-    }
-  };
+  // const handleMarkerCreated = (marker) => {
+  //   if (clusterer.current && clusterVisible) {
+  //     clusterer.current.addMarker(marker);
+  //   }
+  // };
 
-  const handleMarkerUnmounted = (marker) => {
-    if (clusterer.current) {
-      clusterer.current.removeMarker(marker);
-    }
-  };
+  // const handleMarkerUnmounted = (marker) => {
+  //   if (clusterer.current) {
+  //     clusterer.current.removeMarker(marker);
+  //   }
+  // };
 
   if (loading) {
     return (
@@ -223,8 +223,8 @@ const UserMarkers = ({ reloadKey }) => {
               key={user.id}
               user={user}
               index={index}
-              onMarkerCreated={handleMarkerCreated}
-              onMarkerUnmounted={handleMarkerUnmounted}
+              // onMarkerCreated={handleMarkerCreated}
+              // onMarkerUnmounted={handleMarkerUnmounted}
             />
           )
       )}
