@@ -127,7 +127,9 @@ const Controls = ({
           <Card
             size="small"
             style={{
-              width: "100%",
+              width: "80%", 
+              maxWidth: "600px", 
+              marginLeft: "0", 
               padding: "16px",
               borderRadius: "16px",
               background: "rgba(255, 255, 255, 0.75)",
@@ -298,6 +300,7 @@ const Controls = ({
                       checked={optimizeWaypoints}
                       onChange={(checked) => {
                         setOptimizeWaypoints(checked);
+                        // fetchDirections();
                       }}
                       disabled={!waypoints.length}
                     />
