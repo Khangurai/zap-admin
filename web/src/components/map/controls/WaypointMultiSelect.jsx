@@ -27,13 +27,13 @@ const useStyle = createStyles(({ css, token }) => {
     customTable: css`
       ${antCls}-table-container {
         ${antCls}-table-body {
-          max-height: 300px;
+          max-height: 250px;
           overflow: auto;
           scrollbar-width: thin;
         }
         ${antCls}-table-thead > tr > th {
           background: #fafafa;
-          font-weight: 500;
+          fontweight: 500;
         }
       }
     `,
@@ -150,15 +150,24 @@ const DraggableTag = ({ tag, onRemove }) => {
   );
 };
 
-// ✅ Added Status column
 const columns = [
-  { title: <User />, dataIndex: "name", key: "name", width: 100 },
-  { title: <MapPin />, dataIndex: "location", key: "location" },
+  {
+    title: <User />,
+    dataIndex: "name",
+    key: "name",
+    width: "35%",
+  },
+  {
+    title: <MapPin />,
+    dataIndex: "location",
+    key: "location",
+    width: "30%",
+  },
   {
     title: "Status",
     dataIndex: "status",
     key: "status",
-    width: 100,
+    width: "20%",
     render: (status) =>
       status ? (
         <Tag color="green">Active</Tag>
@@ -168,7 +177,7 @@ const columns = [
   },
 ];
 
-const WaypointMultiSelect = ({ onUsersSelect }) => {
+const WaypointMultiSelect = ({ onUsersSelect, waypoints }) => {
   const { styles } = useStyle();
   const [dataSource, setDataSource] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -196,7 +205,7 @@ const WaypointMultiSelect = ({ onUsersSelect }) => {
           name: u.name,
           latitude: u.latitude,
           longitude: u.longitude,
-          status: u.status, // 👈 keep status as boolean
+          status: u.status,
           location: `${u.latitude.toFixed(4)}, ${u.longitude.toFixed(4)}`,
         }));
         setDataSource(formatted);
@@ -205,6 +214,19 @@ const WaypointMultiSelect = ({ onUsersSelect }) => {
     };
     fetchUsers();
   }, []);
+
+  // Reset selectedNames when waypoints are cleared
+  useEffect(() => {
+    if (waypoints.length === 0) {
+      setSelectedNames([]);
+    } else {
+      // Sync selectedNames with waypoints
+      const waypointNames = waypoints.map((w) => w.name);
+      setSelectedNames((prev) =>
+        prev.filter((name) => waypointNames.includes(name))
+      );
+    }
+  }, [waypoints]);
 
   const handleSelectionChange = (keys) => {
     setSelectedNames(keys);
@@ -226,7 +248,6 @@ const WaypointMultiSelect = ({ onUsersSelect }) => {
     item.name.toLowerCase().includes(searchText.toLowerCase())
   );
 
-  // ✅ Disable row selection if status = false
   const rowSelection = {
     selectedRowKeys: selectedNames,
     onChange: handleSelectionChange,
@@ -317,7 +338,7 @@ const WaypointMultiSelect = ({ onUsersSelect }) => {
           className={styles.selectContainer}
           style={{ width: "100%" }}
           popupRender={() => (
-            <div style={{ padding: 8 }} ref={tableRef}>
+            <div style={{ width: "100%", margin: "0" }} ref={tableRef}>
               <Table
                 size="small"
                 columns={columns}
@@ -328,7 +349,7 @@ const WaypointMultiSelect = ({ onUsersSelect }) => {
                 scroll={{ y: 55 * 5 }}
                 className={styles.customTable}
                 rowClassName={(record, index) => {
-                  if (record.status === false) return "row-inactive"; // 👈 grey out inactive
+                  if (record.status === false) return "row-inactive";
                   return index === activeIndex ? styles.activeRow : "";
                 }}
                 loading={loading}

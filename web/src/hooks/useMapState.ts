@@ -361,6 +361,7 @@ export const useMapState = (
     setWaypoints([]);
     setDirections(null);
     setSavedRouteGeoJSON(null);
+    setOptimizeWaypoints(false);
     if (directionsRenderer) {
       directionsRenderer.setMap(null); // Disconnect from map
       directionsRenderer.setDirections(null);

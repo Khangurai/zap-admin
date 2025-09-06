@@ -55,8 +55,8 @@ interface ControlsProps {
   totalDuration: string | null;
   directions: google.maps.DirectionsResult | null;
   onReloadMarkers: () => void;
-  optimizeWaypoints: boolean; // New prop
-  setOptimizeWaypoints: (value: boolean) => void; // New prop
+  optimizeWaypoints: boolean;
+  setOptimizeWaypoints: (value: boolean) => void;
 }
 
 const Controls = ({
@@ -109,6 +109,10 @@ const Controls = ({
     ? waypoints.findIndex((w) => w.id === activeId)
     : -1;
 
+  const handleClearRoute = () => {
+    clearRoute(); // This will reset origin, destination, waypoints, and optimizeWaypoints
+  };
+
   return (
     <>
       <MapControl position={ControlPosition.LEFT_TOP}>
@@ -127,7 +131,7 @@ const Controls = ({
           <Card
             size="small"
             style={{
-              width: "75%",
+              width: "80%",
               maxWidth: "600px",
               marginLeft: "0",
               padding: "16px",
@@ -156,54 +160,9 @@ const Controls = ({
             <div
               style={{ display: "flex", flexDirection: "column", gap: "16px" }}
             >
-              {/* Optimize Waypoints
-              <div>
-                <label
-                  style={{
-                    fontWeight: 600,
-                    fontSize: "13px",
-                    color: "#444",
-                    display: "flex",
-                    marginBottom: "4px",
-                  }}
-                >
-                  {optimizeWaypoints
-                    ? "Optimize Waypoints"
-                    : "Waypoints as Ordered"}
-                </label>
-                <Switch
-                  checked={optimizeWaypoints}
-                  onChange={(checked) => {
-                    setOptimizeWaypoints(checked);
-                    fetchDirections();
-                  }}
-                  disabled={!waypoints.length}
-                />
-              </div> */}
-
-              {/* Origin */}
-              <div>
-                <label
-                  style={{
-                    fontWeight: 600,
-                    fontSize: "13px",
-                    color: "#444",
-                    marginBottom: "4px",
-                    display: "flex",
-                  }}
-                >
-                  Origin
-                </label>
-                <PlaceAutocomplete
-                  onPlaceSelect={handleOriginSelect}
-                  place={origin}
-                  placeholder="Enter origin"
-                />
-              </div>
-
               {/* old version */}
-              {/* Waypoints
-              <div>
+              {/* Waypoints*/}
+              {/* <div>
                 <label
                   style={{
                     fontWeight: 600,
@@ -255,7 +214,6 @@ const Controls = ({
                 </div>
               </div> */}
 
-              {/* New version */}
               {/* Waypoints */}
               <div>
                 <div
@@ -300,7 +258,7 @@ const Controls = ({
                       checked={optimizeWaypoints}
                       onChange={(checked) => {
                         setOptimizeWaypoints(checked);
-                        // fetchDirections();
+                        fetchDirections();
                       }}
                       disabled={!waypoints.length}
                     />
@@ -348,12 +306,30 @@ const Controls = ({
                 </div>
               </div>
 
-              {/* <PlaceAutocomplete
-                onPlaceSelect={handleWaypointSelect}
-                place={null}
-                placeholder="Add waypoint"
-              /> */}
-              <WaypointMultiSelect onUsersSelect={handleWaypointsSelect} />
+              <WaypointMultiSelect
+                onUsersSelect={handleWaypointsSelect}
+                waypoints={waypoints}
+              />
+
+              {/* Origin */}
+              <div>
+                <label
+                  style={{
+                    fontWeight: 600,
+                    fontSize: "13px",
+                    color: "#444",
+                    marginBottom: "4px",
+                    display: "flex",
+                  }}
+                >
+                  Origin
+                </label>
+                <PlaceAutocomplete
+                  onPlaceSelect={handleOriginSelect}
+                  place={origin}
+                  placeholder="Enter origin"
+                />
+              </div>
 
               {/* Destination */}
               <div>
@@ -410,7 +386,7 @@ const Controls = ({
                 <Button
                   danger
                   icon={<XCircle size={16} />}
-                  onClick={clearRoute}
+                  onClick={handleClearRoute}
                   disabled={!directions}
                   style={{ flex: 1, minWidth: "100px" }}
                 >
