@@ -55,7 +55,7 @@ export const WaypointMarker: React.FC<WaypointMarkerProps> = ({
             color: "white",
           }}
         >
-          {`W${index + 1}`}
+          {index + 1}
         </div>
       </AdvancedMarker>
 
@@ -68,7 +68,7 @@ export const WaypointMarker: React.FC<WaypointMarkerProps> = ({
           <div style={{ padding: "8px", maxWidth: "200px" }}>
             <strong
               style={{ color: "#faad14", fontSize: "14px" }}
-            >{`Waypoint W${index + 1}`}</strong>
+            >{`Waypoint ${index + 1}`}</strong>
             <div
               style={{
                 fontSize: "16px",

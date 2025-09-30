@@ -275,6 +275,7 @@ const CarsMgmt = () => {
         car_number: row.car_number,
         driver: row.driver,
         capacity: row.capacity,
+        phone:row.phone,
         route_id: row.route_id,
         image_url: row.image_url,
         avatar_url: row.avatar_url,
@@ -309,6 +310,7 @@ const CarsMgmt = () => {
     { title: "Car Number", dataIndex: "car_number", editable: true },
     { title: "Driver", dataIndex: "driver", editable: true },
     { title: "Username", dataIndex: "d_username", editable: true }, // new column
+    { title: "Phone", dataIndex: "phone", editable: true }, // new column
     {
       title: "Capacity",
       dataIndex: "capacity",

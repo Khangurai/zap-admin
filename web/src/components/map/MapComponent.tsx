@@ -92,6 +92,7 @@ const WrappedMap = (props: ReturnType<typeof useMapState>) => {
     destinationInfowindowShown,
     savedRouteGeoJSON,
     waypointInfowindows,
+    waypointOrder,
     handleWaypointMarkerClick,
     handleWaypointInfoWindowClose,
     handleOriginMarkerClick,
@@ -222,17 +223,24 @@ const WrappedMap = (props: ReturnType<typeof useMapState>) => {
         </InfoWindow>
       )}
 
-      {waypoints.map((waypoint, index) => (
-        <WaypointMarker
-          key={waypoint.id}
-          waypoint={waypoint}
-          index={index}
-          isInfoWindowVisible={!!waypointInfowindows[waypoint.id]}
-          onMarkerClick={handleWaypointMarkerClick}
-          onInfoWindowClose={handleWaypointInfoWindowClose}
-          onWaypointDragEnd={updateWaypointPosition}
-        />
-      ))}
+      {waypoints.map((waypoint, index) => {
+        const displayIndex =
+          optimizeWaypoints && waypointOrder.length > 0
+            ? waypointOrder.indexOf(index)
+            : index;
+
+        return (
+          <WaypointMarker
+            key={waypoint.id}
+            waypoint={waypoint}
+            index={displayIndex}
+            isInfoWindowVisible={!!waypointInfowindows[waypoint.id]}
+            onMarkerClick={handleWaypointMarkerClick}
+            onInfoWindowClose={handleWaypointInfoWindowClose}
+            onWaypointDragEnd={updateWaypointPosition}
+          />
+        );
+      })}
 
       {destinationInfowindowShown && destination && (
         <InfoWindow

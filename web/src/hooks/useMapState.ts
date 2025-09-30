@@ -75,18 +75,7 @@ export const useMapState = (
     }
   }, [origin, destination, waypoints, map]);
 
-  // New: Reorder waypoints based on optimized order
-  useEffect(() => {
-    if (waypointOrder.length > 0 && waypoints.length > 0) {
-      setWaypoints((prevWaypoints) => {
-        let newWaypoints = [...prevWaypoints];
-        waypointOrder.forEach((newIndex, originalIndex) => {
-          newWaypoints = arrayMove(newWaypoints, originalIndex, newIndex);
-        });
-        return newWaypoints;
-      });
-    }
-  }, [waypointOrder]);
+
 
   useEffect(() => {
     if (origin && destination && isDragRef.current) {

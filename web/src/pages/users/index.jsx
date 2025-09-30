@@ -53,7 +53,7 @@ const UserList = () => {
     setEditingKey("");
   };
 
-  const save = async (id) => {
+  const save = async (id, username) => {
     try {
       const row = await form.validateFields();
       const newData = [...data];
@@ -61,7 +61,29 @@ const UserList = () => {
 
       if (index > -1) {
         const item = newData[index];
-        const updatedUser = { ...item, ...row };
+
+        // Parse address
+        let latitude = null;
+        let longitude = null;
+        let coords = "No coordinates";
+
+        if (row.address) {
+          const addressString = row.address.replace("📍", "").trim();
+          if (addressString && addressString.toLowerCase() !== "no coordinates") {
+            const parts = addressString.split(",").map((s) => s.trim());
+            if (parts.length === 2) {
+              const lat = parseFloat(parts[0]);
+              const lon = parseFloat(parts[1]);
+              if (!isNaN(lat) && !isNaN(lon)) {
+                latitude = lat;
+                longitude = lon;
+                coords = `📍${latitude}, ${longitude}`;
+              }
+            }
+          }
+        }
+
+        const updatedUser = { ...item, ...row, address: coords };
 
         // update supabase
         const { error } = await supabase
@@ -69,10 +91,17 @@ const UserList = () => {
           .update({
             name: row.name,
             username: row.username,
+            phone: row.phone,
+            latitude: latitude,
+            longitude: longitude,
           })
-          .eq("id", id);
+          .eq("id", id)
+          .eq("username", username);
 
-        if (error) throw error;
+        if (error) {
+          console.error("Supabase Update Error:", error);
+          throw error;
+        }
 
         newData.splice(index, 1, updatedUser);
         setData(newData);
@@ -81,16 +110,25 @@ const UserList = () => {
         message.success("User updated successfully");
       }
     } catch (err) {
-      console.log("Validate Failed:", err);
+      console.error("Validate Failed:", err);
       message.error("Failed to update user");
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id, username) => {
     setDeleteLoadingId(id);
     try {
-      const { error } = await supabase.from("users").delete().eq("id", id);
-      if (error) throw error;
+      const { error } = await supabase
+        .from("users")
+        .delete()
+        .eq("id", id)
+        .eq("username", username);
+
+      if (error) {
+        console.error("Supabase Delete Error:", error);
+        throw error;
+      }
+
       setData((prev) => prev.filter((item) => item.id !== id));
       setFilteredData((prev) => prev.filter((item) => item.id !== id));
       message.success("User deleted successfully");
@@ -101,7 +139,7 @@ const UserList = () => {
     }
   };
 
-  const handleToggleActive = async (id, checked) => {
+  const handleToggleActive = async (id, username, checked) => {
     const previousData = [...data];
     const previousFilteredData = [...filteredData];
 
@@ -117,8 +155,14 @@ const UserList = () => {
       const { error } = await supabase
         .from("users")
         .update({ status: checked })
-        .eq("id", id);
-      if (error) throw error;
+        .eq("id", id)
+        .eq("username", username);
+
+      if (error) {
+        console.error("Supabase Status Update Error:", error);
+        throw error;
+      }
+
       message.success("User status updated");
     } catch (error) {
       setData(previousData);
@@ -140,7 +184,7 @@ const UserList = () => {
           {
             name: values.name,
             username: values.username,
-            // tags: ["member"],
+            phone: values.phone,
             status: true,
           },
         ])
@@ -154,8 +198,9 @@ const UserList = () => {
         serial: data.length + 1,
         name: newUser[0].name,
         username: newUser[0].username,
+        phone: newUser[0].phone,
         address: "No coordinates",
-        // tags: ["member"],
+        tags: ["member"],
         status: true,
       };
 
@@ -187,11 +232,7 @@ const UserList = () => {
             size="small"
             value={searchText}
             onChange={(e) => handleSearch(e.target.value)}
-            style={{
-              width: 150,
-              marginLeft: 4,
-              padding: "0 8px",
-            }}
+            style={{ width: 150, marginLeft: 4, padding: "0 8px" }}
             prefix={
               <SearchOutlined
                 style={{
@@ -215,7 +256,18 @@ const UserList = () => {
       key: "username",
       editable: true,
     },
-    { title: "Address (Lat:Long)", dataIndex: "address", key: "address" },
+    {
+      title: "Phone",
+      dataIndex: "phone",
+      key: "phone",
+      editable: true,
+    },
+        {
+      title: "Address (Lat:Long)",
+      dataIndex: "address",
+      key: "address",
+      editable: true,
+    },
     {
       title: "Tags",
       key: "tags",
@@ -241,7 +293,10 @@ const UserList = () => {
         const editable = isEditing(record);
         return editable ? (
           <span>
-            <a onClick={() => save(record.id)} style={{ marginRight: 8 }}>
+            <a
+              onClick={() => save(record.id, record.username)}
+              style={{ marginRight: 8 }}
+            >
               Save
             </a>
             <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
@@ -257,7 +312,9 @@ const UserList = () => {
               checkedChildren="လိုက်မယ်"
               unCheckedChildren="မလိုက်ဘူး"
               checked={record.status}
-              onChange={(checked) => handleToggleActive(record.id, checked)}
+              onChange={(checked) =>
+                handleToggleActive(record.id, record.username, checked)
+              }
               disabled={loading}
             />
             <Popconfirm
@@ -267,7 +324,7 @@ const UserList = () => {
                 </span>
               }
               description="Are you sure to delete this task?"
-              onConfirm={() => handleDelete(record.id)}
+              onConfirm={() => handleDelete(record.id, record.username)}
               okText="Yes"
               cancelText="No"
               okButtonProps={{
@@ -309,15 +366,7 @@ const UserList = () => {
       const { data: users, error } = await supabase
         .from("users")
         .select(
-          `
-          id,
-          name,
-          username,
-          longitude,
-          latitude,
-          status,
-          created_at
-        `
+          `id, name, username, longitude, latitude, status, created_at, phone`
         )
         .order("created_at", { ascending: true });
 
@@ -339,8 +388,9 @@ const UserList = () => {
             serial: index + 1,
             name: user.name,
             username: user.username,
+            phone: user.phone,
             address: coords,
-            tags: ["member"], // default
+            tags: ["member"],
             status: user.status ?? true,
           };
         });
@@ -372,7 +422,7 @@ const UserList = () => {
             style={{ margin: 0 }}
             rules={[
               {
-                required: true,
+                required: dataIndex !== "address" && dataIndex !== "phone",
                 message: `Please Input ${title}!`,
               },
             ]}
@@ -406,11 +456,8 @@ const UserList = () => {
 
       <Form form={form} component={false}>
         <Table
-          components={{
-            body: {
-              cell: EditableCell,
-            },
-          }}
+          rowKey="id" // ✅ important
+          components={{ body: { cell: EditableCell } }}
           bordered
           columns={mergedColumns}
           dataSource={filteredData}
@@ -439,6 +486,12 @@ const UserList = () => {
             name="username"
             label="Username"
             rules={[{ required: true, message: "Please input username!" }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="phone"
+            label="Phone"
           >
             <Input />
           </Form.Item>

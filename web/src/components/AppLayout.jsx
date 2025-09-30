@@ -26,7 +26,7 @@ const AppLayout = () => {
             }}
           >
             <Outlet />
-            {
+            {/* {
               // indicates very long content
               Array.from({ length: 100 }, (_, index) => (
                 <React.Fragment key={index}>
@@ -34,7 +34,7 @@ const AppLayout = () => {
                   <br />
                 </React.Fragment>
               ))
-            }
+            } */}
           </div>
         </Content>
       </Layout>
