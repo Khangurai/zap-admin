@@ -60,16 +60,16 @@ const Sidebar = ({ collapsed }) => {
         onClick={onClick}
         selectedKeys={[location.pathname]}
         items={[
-          {
-            key: "/",
-            icon: <Rocket />,
-            label: "Mission Control",
-          },
-          {
-            key: "/map-tracking",
-            icon: <Map />,
-            label: "Map Tracking",
-          },
+          // {
+          //   key: "/",
+          //   icon: <Rocket />,
+          //   label: "Mission Control",
+          // },
+          // {
+          //   key: "/map-tracking",
+          //   icon: <Map />,
+          //   label: "Map Tracking",
+          // },
           {
             key: "/routes",
             icon: <Route />,

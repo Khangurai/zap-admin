@@ -26,7 +26,7 @@ const SrcMap = ({ children, onMapClick }) => {
       style={{
         borderRadius: "10px",
         overflow: "hidden",
-        height: "100vh",
+        height: "80vh",
         boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
       }}
     >

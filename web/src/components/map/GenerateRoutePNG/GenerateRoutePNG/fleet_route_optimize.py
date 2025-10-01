@@ -372,6 +372,32 @@ if response.status_code == 200:
         duration = visit["visitRequestDuration"]
         print(f"{i+1}. {label} (စောင့်ဆိုင်းချိန်: {duration})")
 
+    # Optimized waypoints JSON အဖြစ်ထုတ်ပါ
+    optimized_waypoints = []
+    for i, visit in enumerate(route["visits"]):
+        label = visit["shipmentLabel"]
+        # Find the original shipment to get the location
+        original_shipment = next((s for s in payload["shipments"] if s["label"] == label), None)
+        if original_shipment:
+            location = original_shipment["pickups"][0]["arrivalWaypoint"]["location"]["latLng"]
+            waypoint_data = {
+                "id": label,
+                "name": label.split(',')[1] if ',' in label else label,
+                "order": i,
+                "original_index": payload["shipments"].index(original_shipment),
+                "location": {
+                    "latitude": location["latitude"],
+                    "longitude": location["longitude"]
+                },
+                "duration": visit["visitRequestDuration"]
+            }
+            optimized_waypoints.append(waypoint_data)
+
+    with open("optimized_waypoints.json", "w", encoding="utf-8") as f:
+        json.dump(optimized_waypoints, f, ensure_ascii=False, indent=2)
+        print("\n✅ Optimized waypoints ကို optimized_waypoints.json အဖြစ်သိမ်းဆည်းပြီးစီးပါသည်။")
+
+
     # GeoJSON အဖြစ်ထုတ်ပါ
     with open("route_output.geojson", "w", encoding="utf-8") as f:
         polyline = route.get("routePolyline", {}).get("encodedPolyline", "")

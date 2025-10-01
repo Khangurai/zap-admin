@@ -27,7 +27,8 @@ const App = () => {
               </ProtectedRoute>
             }
           >
-            <Route index element={<MissionControl />} />
+            {/* <Route index element={<MissionControl />} /> */}
+            <Route index element={<Index />} />
             <Route path="/map-tracking" element={<RouterGenerator />} />
             <Route path="/routes" element={<Index />} />
             <Route path="/users" element={<UserList />} />
